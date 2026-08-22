@@ -1,0 +1,33 @@
+name: Fix today layout nesting
+
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-today-layout.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fix malformed section nesting
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+          s=s.replace('<section class="section"><div class="datebar"><button id="prevDay">‹</button><strong id="dateLabel"></strong><button id="nextDay">›</button></div>\n<section class="section"><div class="card g3support">','<section class="section"><div class="datebar"><button id="prevDay">‹</button><strong id="dateLabel"></strong><button id="nextDay">›</button></div></section>\n<section class="section"><div class="card g3support">',1)
+          s=s.replace('</div></section>\n<div class="card measure"><h2>体重・腹囲</h2>','</div></section>\n<section class="section"><div class="card measure"><h2>体重・腹囲</h2>',1)
+          p.write_text(s)
+          PY
+      - name: Commit changes
+        run: |
+          if git diff --quiet; then echo 'No changes'; exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git commit -m 'Fix today view section nesting'
+          git push
