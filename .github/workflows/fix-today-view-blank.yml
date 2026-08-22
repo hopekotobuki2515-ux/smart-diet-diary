@@ -1,0 +1,41 @@
+name: Fix today view blank
+
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-today-view-blank.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch index.html
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+          old="function switchView(id){document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id===id));document.querySelectorAll('.footnav button').forEach(b=>b.classList.toggle('active',b.dataset.view===id));if(id==='calendarView')renderCalendar();if(id==='progressView')renderProgress();if(id==='settingsView')loadSettings();window.scrollTo({top:0,behavior:'smooth'})}"
+          new="function switchView(id){document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id===id));document.querySelectorAll('.footnav button').forEach(b=>b.classList.toggle('active',b.dataset.view===id));if(id==='todayView')render();if(id==='calendarView')renderCalendar();if(id==='progressView')renderProgress();if(id==='settingsView')loadSettings();window.scrollTo({top:0,behavior:'auto'})}"
+          if old not in s:
+              raise SystemExit('switchView anchor not found')
+          s=s.replace(old,new,1)
+          old_init="document.getElementById('openGuide').onclick=()=>switchView('guideView');document.getElementById('closeGuide').onclick=()=>switchView('todayView');document.querySelectorAll('.footnav button').forEach(b=>b.onclick=()=>switchView(b.dataset.view));render();loadSettings();"
+          new_init="document.getElementById('openGuide').onclick=()=>switchView('guideView');document.getElementById('closeGuide').onclick=()=>switchView('todayView');document.querySelectorAll('.footnav button').forEach(b=>b.onclick=()=>switchView(b.dataset.view));switchView('todayView');loadSettings();"
+          if old_init not in s:
+              raise SystemExit('init anchor not found')
+          s=s.replace(old_init,new_init,1)
+          p.write_text(s)
+          PY
+      - name: Commit changes
+        run: |
+          if git diff --quiet; then echo 'No changes'; exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git commit -m 'Ensure today view renders when selected'
+          git push
