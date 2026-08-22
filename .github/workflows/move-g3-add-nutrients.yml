@@ -1,0 +1,54 @@
+name: Move group3 support and add nutrient guide
+
+on:
+  push:
+    paths:
+      - '.github/workflows/move-g3-add-nutrients.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch index.html
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+
+          # Move the 3-group support card above the meal cards so it is easier to reach.
+          start='<section class="section"><div class="card g3support">'
+          end='</div></section>\n<section class="section"><div class="summary">'
+          i=s.find(start)
+          j=s.find(end,i)
+          if i!=-1 and j!=-1:
+              card=s[i:j+len('</div></section>')]
+              s=s[:i]+s[j+len('</div></section>\n'):]
+              anchor='<section class="section" id="meals"></section>'
+              s=s.replace(anchor,card+'\n'+anchor,1)
+
+          # Make the educational guide more like the reference material: food examples + main nutrients + role.
+          old='''<div class="guidegroups"><div class="guidegroup g1"><h3>1群</h3><p>乳・乳製品・卵など</p></div><div class="guidegroup g2"><h3>2群</h3><p>魚・肉・豆・豆製品など</p></div><div class="guidegroup g3"><h3>3群</h3><p>野菜・きのこ・海藻・いも・果物など</p></div><div class="guidegroup g4"><h3>4群</h3><p>ご飯・パン・麺・油・砂糖・菓子・調味料など</p></div></div>'''
+          new='''<div class="guidegroups"><div class="guidegroup g1"><h3>1群</h3><p><strong>食品</strong><br>乳・乳製品・卵など</p><p><strong>主な栄養</strong><br>たんぱく質・カルシウム・ビタミンB2など</p><p class="hint">骨や歯、体をつくる材料を補う群です。</p></div><div class="guidegroup g2"><h3>2群</h3><p><strong>食品</strong><br>魚・肉・豆・豆製品など</p><p><strong>主な栄養</strong><br>たんぱく質・鉄・ビタミンB群など</p><p class="hint">筋肉や血液など、体をつくる材料になる群です。</p></div><div class="guidegroup g3"><h3>3群</h3><p><strong>食品</strong><br>野菜・きのこ・海藻・いも・果物など</p><p><strong>主な栄養</strong><br>ビタミン・ミネラル・食物繊維など</p><p class="hint">体の調子を整える働きを支える群です。</p></div><div class="guidegroup g4"><h3>4群</h3><p><strong>食品</strong><br>ご飯・パン・麺・油・砂糖・菓子・調味料など</p><p><strong>主な栄養</strong><br>炭水化物・脂質など</p><p class="hint">主なエネルギー源になる群です。とり過ぎに注意して調整します。</p></div></div>'''
+          if old in s:
+              s=s.replace(old,new,1)
+
+          # Slightly improve readability inside the guide cards.
+          css_anchor='.guidegroup h3{margin:0 0 5px;font-size:16px}'
+          css_new='.guidegroup h3{margin:0 0 7px;font-size:17px}.guidegroup p{margin:7px 0}.guidegroup .hint{margin-top:9px;color:#665f58}'
+          s=s.replace(css_anchor,css_new,1)
+
+          p.write_text(s)
+          PY
+      - name: Commit changes
+        run: |
+          if git diff --quiet; then echo 'No changes'; exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git commit -m 'Move group3 support up and add nutrient guide'
+          git push
