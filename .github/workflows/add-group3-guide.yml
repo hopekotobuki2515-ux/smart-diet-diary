@@ -1,0 +1,80 @@
+name: Add group3 support and guide
+on:
+  push:
+    paths:
+      - '.github/workflows/add-group3-guide.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch index
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+
+          old=".hero h1{font-size:23px;margin:0 0 4px}.hero p{font-size:12px;margin:0;opacity:.95}"
+          new=".hero{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}.herocopy{min-width:0}.hero h1{font-size:23px;margin:0 0 4px}.hero p{font-size:12px;margin:0;opacity:.95}.guidebtn{flex:0 0 auto;border:1px solid rgba(255,255,255,.7);background:rgba(255,255,255,.18);color:#fff;border-radius:12px;padding:8px 10px;font-weight:800;font-size:12px}"
+          assert old in s
+          s=s.replace(old,new,1)
+
+          old=".hint{font-size:11px;color:var(--muted);margin-top:7px}.summary"
+          new=".hint{font-size:11px;color:var(--muted);margin-top:7px}.vegcard{padding:16px;margin-top:12px}.vegcard h2{font-size:18px;margin:0 0 4px}.veggrid{display:grid;gap:10px;margin-top:12px}.vegitem{background:#f7fbf5;border:1px solid #dcebd8;border-radius:14px;padding:11px}.veghead{display:flex;justify-content:space-between;gap:10px;align-items:center}.veghead strong{font-size:13px}.vegvalue{font-weight:800;font-size:14px}.vegbuttons{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.vegbuttons button{border:0;background:#fff;border:1px solid #d8e6d4;border-radius:10px;padding:7px 9px;font-weight:800;color:#45643f}.vegbar{height:8px;background:#e8efe6;border-radius:999px;overflow:hidden;margin-top:8px}.vegbar span{display:block;height:100%;background:#74a96b;width:0}.vegmsg{margin-top:10px;padding:10px 11px;border-radius:12px;background:#f8f8f8;font-size:12px;line-height:1.55}.guideoverlay{position:fixed;inset:0;z-index:80;background:rgba(30,25,20,.45);display:none;align-items:flex-end;justify-content:center}.guideoverlay.open{display:flex}.guidesheet{width:min(520px,100%);max-height:88vh;overflow:auto;background:#fffaf5;border-radius:22px 22px 0 0;padding:16px 14px calc(24px + env(safe-area-inset-bottom))}.guidebar{display:flex;justify-content:space-between;align-items:center;gap:10px;position:sticky;top:0;background:#fffaf5;padding-bottom:10px;z-index:2}.guidebar h2{margin:0;font-size:20px}.guideclose{border:0;background:#f1e8df;border-radius:10px;padding:8px 10px;font-weight:800}.guidecards{display:grid;gap:10px}.guidecard{border-radius:16px;padding:14px;border:1px solid #eadfd5;background:#fff}.guidecard h3{margin:0 0 6px;font-size:16px}.guidecard p{margin:0;font-size:13px;line-height:1.65}.guidecard.g1{background:var(--g1)}.guidecard.g2{background:var(--g2)}.guidecard.g3{background:var(--g3)}.guidecard.g4{background:var(--g4)}.summary"
+          assert old in s
+          s=s.replace(old,new,1)
+
+          old='<header class="hero"><h1>SMART Diet ダイアリー</h1><p>写真と四群点数法で、食べ方のバランスに気づく</p></header>'
+          new='<header class="hero"><div class="herocopy"><h1>SMART Diet ダイアリー</h1><p>写真と四群点数法で、食べ方のバランスに気づく</p></div><button type="button" class="guidebtn" id="openGuide">四群の見方</button></header>'
+          assert old in s
+          s=s.replace(old,new,1)
+
+          old='<section class="section" id="meals"></section>\n<section class="section"><div class="summary">'
+          new='<section class="section" id="meals"></section>\n<section class="section"><div class="card vegcard"><h2>3群サポート</h2><p class="subtle">1日の量をざっくり記録。食事ごとの3群カウントとは別の補助機能です。</p><div class="veggrid"><div class="vegitem"><div class="veghead"><strong>野菜合計</strong><span class="vegvalue" id="vegTotal">0 / 350g</span></div><div class="vegbar"><span id="vegTotalBar"></span></div></div><div class="vegitem"><div class="veghead"><strong>緑黄色野菜</strong><span class="vegvalue" id="greenVegValue">0 / 120g以上</span></div><div class="vegbuttons"><button data-veg="green" data-veg-step="-50">−50g</button><button data-veg="green" data-veg-step="50">＋50g</button><button data-veg="green" data-veg-step="100">＋100g</button></div><div class="vegbar"><span id="greenVegBar"></span></div></div><div class="vegitem"><div class="veghead"><strong>淡色野菜</strong><span class="vegvalue" id="paleVegValue">0g</span></div><div class="vegbuttons"><button data-veg="pale" data-veg-step="-50">−50g</button><button data-veg="pale" data-veg-step="50">＋50g</button><button data-veg="pale" data-veg-step="100">＋100g</button></div></div><div class="vegitem"><div class="veghead"><strong>きのこ・海藻</strong><span class="vegvalue" id="mushVegValue">0 / 30〜40g</span></div><div class="vegbuttons"><button data-veg="mush" data-veg-step="-10">−10g</button><button data-veg="mush" data-veg-step="10">＋10g</button><button data-veg="mush" data-veg-step="20">＋20g</button></div><div class="vegbar"><span id="mushVegBar"></span></div></div></div><div class="hint">目安：野菜350g/日、うち緑黄色野菜120g以上。緑黄色野菜は、見分け方の一例として切った断面まで色が濃いものが多いです。</div><div class="vegmsg" id="vegMessage"></div><button type="button" class="secondary" id="resetVeg" style="width:100%;border:0;border-radius:11px;padding:10px;font-weight:800;margin-top:9px">3群サポートをリセット</button></div></section>\n<section class="section"><div class="summary">'
+          assert old in s
+          s=s.replace(old,new,1)
+
+          old='<nav class="footnav"><div><button data-view="todayView" class="active">今日</button><button data-view="calendarView">カレンダー</button><button data-view="progressView">進捗</button><button data-view="settingsView">設定</button></div></nav>\n<script>'
+          new='<div class="guideoverlay" id="guideOverlay"><div class="guidesheet"><div class="guidebar"><h2>四群の見方</h2><button type="button" class="guideclose" id="closeGuide">閉じる</button></div><div class="guidecards"><div class="guidecard"><h3>四群点数法</h3><p>食品を4つの群に分けて、食事のバランスを見やすくする考え方です。1点＝80kcalとして扱います。</p></div><div class="guidecard g1"><h3>1群｜乳・卵</h3><p>牛乳、ヨーグルト、チーズ、卵など。</p></div><div class="guidecard g2"><h3>2群｜魚・肉・豆</h3><p>魚、肉、豆腐、納豆など。</p></div><div class="guidecard g3"><h3>3群｜野菜など</h3><p>野菜、きのこ、海藻、いも、果物など。野菜は1日350g、うち緑黄色野菜120g以上を目安にします。きのこ・海藻は30〜40g/日を補助目安として表示します。</p></div><div class="guidecard g4"><h3>4群｜主食・油など</h3><p>ご飯、パン、麺、油、砂糖、菓子、調味料、酒など。分類に迷う食品は「判定保留」で記録できます。</p></div><div class="guidecard"><h3>迷ったとき</h3><p>外食や複合料理など、どの群か判断しづらい場合は判定保留に入れてください。判定保留は4群の点数と偏り判定には含めません。</p></div></div></div></div>\n<nav class="footnav"><div><button data-view="todayView" class="active">今日</button><button data-view="calendarView">カレンダー</button><button data-view="progressView">進捗</button><button data-view="settingsView">設定</button></div></nav>\n<script>'
+          assert old in s
+          s=s.replace(old,new,1)
+
+          old="function blankDay(){return{...Object.fromEntries(mealDefs.map(([id])=>[id,blankMeal()])),weight:'',waist:'',memo:''}}"
+          new="function blankDay(){return{...Object.fromEntries(mealDefs.map(([id])=>[id,blankMeal()])),weight:'',waist:'',memo:'',veg3:{green:0,pale:0,mush:0}}}"
+          assert old in s
+          s=s.replace(old,new,1)
+
+          old="base.weight=raw.weight??'';base.waist=raw.waist??'';base.memo=raw.memo??'';return base}"
+          new="base.weight=raw.weight??'';base.waist=raw.waist??'';base.memo=raw.memo??'';base.veg3={green:Math.max(0,Number(raw.veg3?.green)||0),pale:Math.max(0,Number(raw.veg3?.pale)||0),mush:Math.max(0,Number(raw.veg3?.mush)||0)};return base}"
+          assert old in s
+          s=s.replace(old,new,1)
+
+          marker="function persistDay(showAlert=false){"
+          add="""function renderVegSupport(){const d=dayData(),v=d.veg3||(d.veg3={green:0,pale:0,mush:0}),total=(Number(v.green)||0)+(Number(v.pale)||0);document.getElementById('vegTotal').textContent=`${total} / 350g`;document.getElementById('greenVegValue').textContent=`${Number(v.green)||0} / 120g以上`;document.getElementById('paleVegValue').textContent=`${Number(v.pale)||0}g`;document.getElementById('mushVegValue').textContent=`${Number(v.mush)||0} / 30〜40g`;document.getElementById('vegTotalBar').style.width=Math.min(100,total/350*100)+'%';document.getElementById('greenVegBar').style.width=Math.min(100,(Number(v.green)||0)/120*100)+'%';document.getElementById('mushVegBar').style.width=Math.min(100,(Number(v.mush)||0)/30*100)+'%';let msg=[];if(total>=350)msg.push('○ 野菜350gの目安を達成しています。');else msg.push(`野菜はあと約${350-total}gで350gの目安です。`);if((Number(v.green)||0)>=120)msg.push('○ 緑黄色野菜120g以上を達成しています。');else msg.push('緑黄色野菜も少し足せると良いですね。');if((Number(v.mush)||0)<30)msg.push('きのこ・海藻も意識できるとさらに良いです。');document.getElementById('vegMessage').textContent=msg.join(' ')}
+"""
+          assert marker in s
+          s=s.replace(marker,add+marker,1)
+
+          old="const s=renderBalance(document.getElementById('balance'),d);const a=document.getElementById('advice');a.textContent=s.txt;a.className='advice '+s.cls}"
+          new="const s=renderBalance(document.getElementById('balance'),d);const a=document.getElementById('advice');a.textContent=s.txt;a.className='advice '+s.cls;renderVegSupport()}"
+          assert old in s
+          s=s.replace(old,new,1)
+
+          old="document.getElementById('weightInput').addEventListener('change',()=>{persistDay(false);"
+          new="document.querySelectorAll('[data-veg-step]').forEach(b=>b.onclick=()=>{const d=dayData(),k=b.dataset.veg,step=Number(b.dataset.vegStep);d.veg3=d.veg3||{green:0,pale:0,mush:0};d.veg3[k]=Math.max(0,(Number(d.veg3[k])||0)+step);localStorage.setItem('sdd-'+keyDate(current),JSON.stringify(d));renderVegSupport()});document.getElementById('resetVeg').onclick=()=>{const d=dayData();d.veg3={green:0,pale:0,mush:0};localStorage.setItem('sdd-'+keyDate(current),JSON.stringify(d));renderVegSupport()};document.getElementById('openGuide').onclick=()=>document.getElementById('guideOverlay').classList.add('open');document.getElementById('closeGuide').onclick=()=>document.getElementById('guideOverlay').classList.remove('open');document.getElementById('guideOverlay').onclick=e=>{if(e.target.id==='guideOverlay')e.currentTarget.classList.remove('open')};document.getElementById('weightInput').addEventListener('change',()=>{persistDay(false);"
+          assert old in s
+          s=s.replace(old,new,1)
+
+          p.write_text(s)
+          PY
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git diff --cached --quiet && exit 0
+          git commit -m "Add group3 support and four-group guide"
+          git push
