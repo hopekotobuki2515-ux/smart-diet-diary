@@ -1,0 +1,39 @@
+name: Move group3 support to top
+
+on:
+  push:
+    paths:
+      - '.github/workflows/move-group3-support-to-top.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Move group3 support directly under date bar
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+          start=s.index('<section class="section"><div class="card g3support">')
+          end=s.index('</section>', start)+len('</section>')
+          block=s[start:end]
+          s=s[:start]+s[end:]
+          anchor='<div class="card measure">'
+          pos=s.index(anchor)
+          # insert just before body measurement card, within the top section
+          s=s[:pos]+block+'\n'+s[pos:]
+          p.write_text(s)
+          PY
+      - name: Commit changes
+        run: |
+          if git diff --quiet; then echo 'No changes'; exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git commit -m 'Move group3 support directly under date'
+          git push
