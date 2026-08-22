@@ -1,0 +1,57 @@
+name: Add group4 hold and bias alerts
+on:
+  push:
+    paths:
+      - '.github/workflows/add-group4-hold.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch index.html
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+
+          s=s.replace(".guidecalc span{background:#fff;border:1px solid #eadfd5;border-radius:9px;padding:6px 3px;text-align:center;font-weight:700}.stepper{", ".guidecalc span{background:#fff;border:1px solid #eadfd5;border-radius:9px;padding:6px 3px;text-align:center;font-weight:700}.hold4{width:100%;margin-top:10px;border:1px solid #e4d5c7;background:#fff;border-radius:11px;padding:9px 8px;font-size:12px;font-weight:800;color:#7b4a24}.hold4.on{background:#f3eee9;border-color:#bca996;color:#5d5147}.stepper{")
+
+          s=s.replace("function blankMeal(){return{groups:[],sub3:[],p4:0,img:null}}", "function blankMeal(){return{groups:[],sub3:[],p4:0,hold4:false,img:null}}")
+
+          old="function getSummary(d){const counts=[1,2,3,4].map(g=>mealDefs.reduce((n,[id])=>n+(d[id].groups.includes(g)?1:0),0));const total4=mealDefs.reduce((n,[id])=>n+(Number(d[id].p4)||0),0),target4=state.sex==='female'?6:12;const sub3=mealDefs.flatMap(([id])=>d[id].sub3||[]),unique3=[...new Set(sub3)];let txt='',cls='';if(total4>target4){txt=`⚠️ 4群が目安を ${(total4-target4).toFixed(1)}点上回っています。次の食事では主食・油・甘いものの重なりを少し調整してみましょう。`;cls='alert-danger'}else if(total4>=target4*.8){txt=`△ 4群は目安に近づいています。あと ${Math.max(0,target4-total4).toFixed(1)}点が目安です。`;cls='alert-warn'}else{txt='○ 4群は今のところ目安以内です。';cls='alert-good'}if(unique3.length<2)txt+=' 3群は種類をもう1つ増やせると、よりバランスを意識できます。';else txt+=' 3群も複数の種類を意識できています。';return{counts,total4,target4,txt,cls}}"
+          new="function getSummary(d){const counts=[1,2,3].map(g=>mealDefs.reduce((n,[id])=>n+(d[id].groups.includes(g)?1:0),0));const regular4=mealDefs.reduce((n,[id])=>n+(d[id].groups.includes(4)&&!d[id].hold4?1:0),0);counts.push(regular4);const total4=mealDefs.reduce((n,[id])=>n+(d[id].hold4?0:(Number(d[id].p4)||0)),0),target4=state.sex==='female'?6:12;const sub3=mealDefs.flatMap(([id])=>d[id].sub3||[]),unique3=[...new Set(sub3)];let txt='',cls='';if(total4>target4){txt=`⚠️ 4群のエネルギーが目安を ${(total4-target4).toFixed(1)}点上回っています。次の食事では主食・油・甘いものの重なりを少し調整してみましょう。`;cls='alert-danger'}else if(total4>=target4*.8){txt=`△ 4群は目安に近づいています。あと ${Math.max(0,target4-total4).toFixed(1)}点が目安です。`;cls='alert-warn'}else{txt='○ 4群のエネルギーは今のところ目安以内です。';cls='alert-good'}const avg123=(counts[0]+counts[1]+counts[2])/3;if(regular4>=3&&regular4>avg123+.5)txt+=' ⚠️ 4群に偏り気味です。1〜3群も意識してみましょう。';if(unique3.length<2)txt+=' 3群は種類をもう1つ増やせると、よりバランスを意識できます。';else txt+=' 3群も複数の種類を意識できています。';return{counts,total4,target4,txt,cls}}"
+          if old not in s:
+              raise SystemExit('getSummary target not found')
+          s=s.replace(old,new)
+
+          old="<div class=\"pointrow\"><div><strong>4群の点数</strong><div class=\"hint\">1点＝80kcal</div></div><div class=\"stepper\"><button data-step=\"-0.5\">−</button><span class=\"point\">${Number(m.p4).toFixed(1)}</span><button data-step=\"0.5\">＋</button></div></div><details class=\"pointguide\">"
+          new="<div class=\"pointrow\"><div><strong>4群の点数</strong><div class=\"hint\">1点＝80kcal</div></div><div class=\"stepper\"><button data-step=\"-0.5\" ${m.hold4?'disabled':''}>−</button><span class=\"point\">${m.hold4?'0.0':Number(m.p4).toFixed(1)}</span><button data-step=\"0.5\" ${m.hold4?'disabled':''}>＋</button></div></div><button type=\"button\" class=\"hold4 ${m.hold4?'on':''}\" data-hold4>${m.hold4?'✓ 判定保留（点数なし）':'分類に迷う → 判定保留'}</button><div class=\"hint\">判定保留は4群の点数・偏り判定に含めません。</div><details class=\"pointguide\">"
+          if old not in s:
+              raise SystemExit('point4 target not found')
+          s=s.replace(old,new)
+
+          old="el.querySelectorAll('.grp').forEach(b=>b.onclick=()=>{const g=+b.dataset.g;m.groups=m.groups.includes(g)?m.groups.filter(x=>x!==g):[...m.groups,g];if(g===4&&!m.groups.includes(4))m.p4=0;render()});el.querySelectorAll('.chip')"
+          new="el.querySelectorAll('.grp').forEach(b=>b.onclick=()=>{const g=+b.dataset.g;m.groups=m.groups.includes(g)?m.groups.filter(x=>x!==g):[...m.groups,g];if(g===4&&!m.groups.includes(4)){m.p4=0;m.hold4=false}render()});const holdBtn=el.querySelector('[data-hold4]');if(holdBtn)holdBtn.onclick=()=>{m.hold4=!m.hold4;if(m.hold4)m.p4=0;render()};el.querySelectorAll('.chip')"
+          if old not in s:
+              raise SystemExit('group handler target not found')
+          s=s.replace(old,new)
+
+          old="el.querySelectorAll('[data-step]').forEach(b=>b.onclick=()=>{m.p4=Math.max(0,Math.round((Number(m.p4)+(+b.dataset.step))*2)/2);render()});"
+          new="el.querySelectorAll('[data-step]').forEach(b=>b.onclick=()=>{if(m.hold4)return;m.p4=Math.max(0,Math.round((Number(m.p4)+(+b.dataset.step))*2)/2);render()});"
+          if old not in s:
+              raise SystemExit('step handler target not found')
+          s=s.replace(old,new)
+
+          p.write_text(s)
+          PY
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git diff --cached --quiet && exit 0
+          git commit -m "Add group4 hold and bias alerts"
+          git push
