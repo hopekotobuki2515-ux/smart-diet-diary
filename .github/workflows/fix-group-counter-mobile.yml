@@ -1,0 +1,37 @@
+name: Fix group counter mobile layout
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-group-counter-mobile.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch mobile group layout
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+          old=".groups{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}.grp{border:2px solid transparent;border-radius:14px;padding:10px 4px;text-align:center;font-weight:800;cursor:pointer;user-select:none}"
+          new=".groups{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:12px;width:100%;overflow:hidden}.grp{min-width:0;overflow:hidden;border:2px solid transparent;border-radius:14px;padding:10px 2px;text-align:center;font-weight:800;cursor:pointer;user-select:none}"
+          if old not in s:
+              raise SystemExit('groups css target not found')
+          s=s.replace(old,new,1)
+          old2=".groupcounter,.holdcounter{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:7px}.groupcounter button,.holdcounter button{width:28px;height:28px;border:0;border-radius:50%;background:rgba(255,255,255,.82);font-size:18px;font-weight:800}.groupcounter b,.holdcounter b{min-width:22px;text-align:center;font-size:14px}"
+          new2=".groupcounter,.holdcounter{display:flex;align-items:center;justify-content:center;gap:4px;margin-top:7px;min-width:0}.groupcounter button,.holdcounter button{flex:0 0 24px;width:24px;height:24px;padding:0;border:0;border-radius:50%;background:rgba(255,255,255,.82);font-size:16px;font-weight:800;line-height:24px}.groupcounter b,.holdcounter b{min-width:16px;text-align:center;font-size:13px}"
+          if old2 not in s:
+              raise SystemExit('counter css target not found')
+          s=s.replace(old2,new2,1)
+          p.write_text(s)
+          PY
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "Fix group counter layout on iPhone" || exit 0
+          git push
