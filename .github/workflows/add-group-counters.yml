@@ -1,0 +1,55 @@
+name: Add group counters
+on:
+  push:
+    paths:
+      - '.github/workflows/add-group-counters.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch index
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+
+          s=s.replace(".hold4{width:100%;margin-top:10px;border:1px solid #e4d5c7;background:#fff;border-radius:11px;padding:9px 8px;font-size:12px;font-weight:800;color:#7b4a24}.hold4.on{background:#f3eee9;border-color:#bca996;color:#5d5147}", ".hold4{margin-top:10px;border:1px solid #e4d5c7;background:#fff;border-radius:11px;padding:9px 10px;font-size:12px;font-weight:800;color:#7b4a24}.groupcounter,.holdcounter{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:7px}.groupcounter button,.holdcounter button{width:28px;height:28px;border:0;border-radius:50%;background:rgba(255,255,255,.82);font-size:18px;font-weight:800}.groupcounter b,.holdcounter b{min-width:22px;text-align:center;font-size:14px}.holdrow{display:flex;align-items:center;justify-content:space-between;gap:10px}.holdrow>span{font-weight:800}")
+
+          s=s.replace("function blankMeal(){return{groups:[],sub3:[],p4:0,hold4:false,img:null}}", "function blankMeal(){return{groups:[],groupCounts:{1:0,2:0,3:0},sub3:[],p4:0,hold4Count:0,img:null}}")
+
+          s=s.replace("function normalizeDay(raw){const base=blankDay();if(!raw)return base;mealDefs.forEach(([id])=>{base[id]={...blankMeal(),...(raw[id]||{})}});base.weight=raw.weight??'';base.waist=raw.waist??'';base.memo=raw.memo??'';return base}", "function normalizeDay(raw){const base=blankDay();if(!raw)return base;mealDefs.forEach(([id])=>{const old=raw[id]||{},m={...blankMeal(),...old};m.groupCounts={1:Number(old.groupCounts?.[1]??(old.groups?.includes(1)?1:0))||0,2:Number(old.groupCounts?.[2]??(old.groups?.includes(2)?1:0))||0,3:Number(old.groupCounts?.[3]??(old.groups?.includes(3)?1:0))||0};m.groups=[1,2,3].filter(g=>m.groupCounts[g]>0);if(old.groups?.includes(4))m.groups.push(4);m.hold4Count=Math.max(0,Number(old.hold4Count??(old.hold4?1:0))||0);delete m.hold4;base[id]=m});base.weight=raw.weight??'';base.waist=raw.waist??'';base.memo=raw.memo??'';return base}")
+
+          s=s.replace("function getSummary(d){const counts=[1,2,3].map(g=>mealDefs.reduce((n,[id])=>n+(d[id].groups.includes(g)?1:0),0));const regular4=mealDefs.reduce((n,[id])=>n+(d[id].groups.includes(4)&&!d[id].hold4?1:0),0);counts.push(regular4);const total4=mealDefs.reduce((n,[id])=>n+(d[id].hold4?0:(Number(d[id].p4)||0)),0),target4=state.sex==='female'?6:12;", "function getSummary(d){const counts=[1,2,3].map(g=>mealDefs.reduce((n,[id])=>n+(Number(d[id].groupCounts?.[g])||0),0));const regular4=mealDefs.reduce((n,[id])=>n+(d[id].groups.includes(4)?1:0),0);counts.push(regular4);const total4=mealDefs.reduce((n,[id])=>n+(Number(d[id].p4)||0),0),hold4Total=mealDefs.reduce((n,[id])=>n+(Number(d[id].hold4Count)||0),0),target4=state.sex==='female'?6:12;")
+
+          s=s.replace("if(unique3.length<2)txt+=' 3群は種類をもう1つ増やせると、よりバランスを意識できます。';else txt+=' 3群も複数の種類を意識できています。';return{counts,total4,target4,txt,cls}}", "if(unique3.length<2)txt+=' 3群は種類をもう1つ増やせると、よりバランスを意識できます。';else txt+=' 3群も複数の種類を意識できています。';if(hold4Total>0)txt+=` 判定保留は${hold4Total}品あります（点数・偏り判定には含めません）。`;return{counts,total4,target4,hold4Total,txt,cls}}")
+
+          old="${[1,2,3,4].map(g=>`<div class=\"grp g${g} ${m.groups.includes(g)?'on':''}\" data-g=\"${g}\">${g}群<small>${['','乳・卵','魚・肉・豆','野菜など','主食・油など'][g]}</small></div>`).join('')}"
+          new="${[1,2,3,4].map(g=>g<4?`<div class=\"grp g${g} ${(Number(m.groupCounts?.[g])||0)>0?'on':''}\" data-g=\"${g}\">${g}群<small>${['','乳・卵','魚・肉・豆','野菜など'][g]}</small><div class=\"groupcounter\"><button type=\"button\" data-count-step=\"-1\" data-count-g=\"${g}\">−</button><b>${Number(m.groupCounts?.[g])||0}</b><button type=\"button\" data-count-step=\"1\" data-count-g=\"${g}\">＋</button></div></div>`:`<div class=\"grp g4 ${m.groups.includes(4)?'on':''}\" data-g=\"4\">4群<small>主食・油など</small></div>`).join('')}"
+          if old not in s: raise SystemExit('group render target not found')
+          s=s.replace(old,new)
+
+          old="<div class=\"stepper\"><button data-step=\"-0.5\" ${m.hold4?'disabled':''}>−</button><span class=\"point\">${m.hold4?'0.0':Number(m.p4).toFixed(1)}</span><button data-step=\"0.5\" ${m.hold4?'disabled':''}>＋</button></div></div><button type=\"button\" class=\"hold4 ${m.hold4?'on':''}\" data-hold4>${m.hold4?'✓ 判定保留（点数なし）':'分類に迷う → 判定保留'}</button><div class=\"hint\">判定保留は4群の点数・偏り判定に含めません。</div>"
+          new="<div class=\"stepper\"><button data-step=\"-0.5\">−</button><span class=\"point\">${Number(m.p4).toFixed(1)}</span><button data-step=\"0.5\">＋</button></div></div><div class=\"hold4\"><div class=\"holdrow\"><span>分類に迷う → 判定保留</span><div class=\"holdcounter\"><button type=\"button\" data-hold-step=\"-1\">−</button><b>${Number(m.hold4Count)||0}</b><button type=\"button\" data-hold-step=\"1\">＋</button></div></div></div><div class=\"hint\">判定保留は何品でも記録できます。4群の点数・偏り判定には含めません。</div>"
+          if old not in s: raise SystemExit('hold UI target not found')
+          s=s.replace(old,new)
+
+          old="el.querySelectorAll('.grp').forEach(b=>b.onclick=()=>{const g=+b.dataset.g;m.groups=m.groups.includes(g)?m.groups.filter(x=>x!==g):[...m.groups,g];if(g===4&&!m.groups.includes(4)){m.p4=0;m.hold4=false}render()});const holdBtn=el.querySelector('[data-hold4]');if(holdBtn)holdBtn.onclick=()=>{m.hold4=!m.hold4;if(m.hold4)m.p4=0;render()};"
+          new="el.querySelectorAll('.grp').forEach(b=>b.onclick=e=>{const g=+b.dataset.g;if(e.target.closest('[data-count-step]'))return;if(g===4){m.groups=m.groups.includes(4)?m.groups.filter(x=>x!==4):[...m.groups,4];if(!m.groups.includes(4))m.p4=0}else{m.groupCounts[g]=(Number(m.groupCounts?.[g])||0)>0?0:1;m.groups=[1,2,3].filter(x=>(Number(m.groupCounts?.[x])||0)>0);if(m.groups.includes(4)||g===4)m.groups.push(4)}render()});el.querySelectorAll('[data-count-step]').forEach(b=>b.onclick=e=>{e.stopPropagation();const g=+b.dataset.countG,step=+b.dataset.countStep;m.groupCounts[g]=Math.max(0,(Number(m.groupCounts?.[g])||0)+step);const has4=m.groups.includes(4);m.groups=[1,2,3].filter(x=>(Number(m.groupCounts?.[x])||0)>0);if(has4)m.groups.push(4);render()});el.querySelectorAll('[data-hold-step]').forEach(b=>b.onclick=()=>{m.hold4Count=Math.max(0,(Number(m.hold4Count)||0)+(+b.dataset.holdStep));render()});"
+          if old not in s: raise SystemExit('handlers target not found')
+          s=s.replace(old,new)
+
+          s=s.replace("el.querySelectorAll('[data-step]').forEach(b=>b.onclick=()=>{if(m.hold4)return;m.p4=Math.max(0,Math.round((Number(m.p4)+(+b.dataset.step))*2)/2);render()});", "el.querySelectorAll('[data-step]').forEach(b=>b.onclick=()=>{m.p4=Math.max(0,Math.round((Number(m.p4)+(+b.dataset.step))*2)/2);render()});")
+
+          p.write_text(s)
+          PY
+      - name: Commit
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add index.html
+          git diff --cached --quiet || git commit -m "Add repeat counters for groups and hold items"
+          git push
