@@ -1,0 +1,53 @@
+name: Add BMI22 comparison
+on:
+  push:
+    paths:
+      - '.github/workflows/add-bmi22.yml'
+permissions:
+  contents: write
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Update BMI22 setting
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+
+          old='.presetnote{font-size:11px;color:var(--muted);line-height:1.55;margin-top:7px}.recordlist'
+          new='.presetnote{font-size:11px;color:var(--muted);line-height:1.55;margin-top:7px}.bmiover{display:none;margin-top:10px;padding:10px 12px;border-radius:12px;background:#fff4e8;color:#8b4e1d;font-size:12px;font-weight:700;line-height:1.5}.recordlist'
+          assert old in s
+          s=s.replace(old,new,1)
+
+          old='<div class="goalgrid" style="margin-top:14px"><div class="field"><label>開始体重</label><div class="fieldbox"><input id="startWeight" type="number" inputmode="decimal" step="0.1" placeholder="例 80.0"><span class="unit">kg</span></div></div><div class="field"><label>3か月後の目標体重</label><div class="fieldbox"><input id="goalWeight" type="number" inputmode="decimal" step="0.1" placeholder="例 72.0"><span class="unit">kg</span></div></div></div><div class="goalpresets">'
+          new='<div class="goalgrid" style="margin-top:14px"><div class="field"><label>身長</label><div class="fieldbox"><input id="heightCm" type="number" inputmode="decimal" step="0.1" placeholder="例 170.0"><span class="unit">cm</span></div></div><div class="field"><label>開始体重</label><div class="fieldbox"><input id="startWeight" type="number" inputmode="decimal" step="0.1" placeholder="例 80.0"><span class="unit">kg</span></div></div></div><div id="bmi22Over" class="bmiover"></div><div class="field" style="margin-top:14px"><label>3か月後の目標体重</label><div class="fieldbox"><input id="goalWeight" type="number" inputmode="decimal" step="0.1" placeholder="例 72.0"><span class="unit">kg</span></div></div></div><div class="goalpresets">'
+          assert old in s
+          s=s.replace(old,new,1)
+
+          old="function loadSettings(){const cfg=JSON.parse(localStorage.getItem('sdd-settings')||'{}');state.sex=cfg.sex||state.sex;document.getElementById('startWeight').value=cfg.startWeight||'';document.getElementById('goalWeight').value=cfg.goalWeight||'';document.getElementById('startWaist').value=cfg.startWaist||'';document.getElementById('goalWaist').value=cfg.goalWaist||'';document.querySelectorAll('#sexButtons button').forEach(b=>b.classList.toggle('on',b.dataset.sex===state.sex))}"
+          new="function updateBmi22Over(){const h=Number(document.getElementById('heightCm').value)/100,w=Number(document.getElementById('startWeight').value),box=document.getElementById('bmi22Over');if(!h||h<=0||!w||w<=0){box.style.display='none';box.textContent='';return}const bmi22=22*h*h,over=w-bmi22;if(over>0.05){box.textContent=`BMI22相当の体重 ${bmi22.toFixed(1)}kg に対して ${over.toFixed(1)}kgオーバーしています。`;box.style.display='block'}else{box.style.display='none';box.textContent=''}}\nfunction loadSettings(){const cfg=JSON.parse(localStorage.getItem('sdd-settings')||'{}');state.sex=cfg.sex||state.sex;document.getElementById('heightCm').value=cfg.heightCm||'';document.getElementById('startWeight').value=cfg.startWeight||'';document.getElementById('goalWeight').value=cfg.goalWeight||'';document.getElementById('startWaist').value=cfg.startWaist||'';document.getElementById('goalWaist').value=cfg.goalWaist||'';document.querySelectorAll('#sexButtons button').forEach(b=>b.classList.toggle('on',b.dataset.sex===state.sex));updateBmi22Over()}"
+          assert old in s
+          s=s.replace(old,new,1)
+
+          old="document.querySelectorAll('#goalPresets .presetbtn').forEach(b=>b.onclick=()=>applyGoalPreset(Number(b.dataset.pct)));document.getElementById('goalWeight').addEventListener('input',()=>document.querySelectorAll('#goalPresets .presetbtn').forEach(b=>b.classList.remove('on')));"
+          new="document.querySelectorAll('#goalPresets .presetbtn').forEach(b=>b.onclick=()=>applyGoalPreset(Number(b.dataset.pct)));document.getElementById('goalWeight').addEventListener('input',()=>document.querySelectorAll('#goalPresets .presetbtn').forEach(b=>b.classList.remove('on')));document.getElementById('heightCm').addEventListener('input',updateBmi22Over);document.getElementById('startWeight').addEventListener('input',updateBmi22Over);"
+          assert old in s
+          s=s.replace(old,new,1)
+
+          old="const cfg={sex:state.sex,startWeight:document.getElementById('startWeight').value,goalWeight:document.getElementById('goalWeight').value,startWaist:document.getElementById('startWaist').value,goalWaist:document.getElementById('goalWaist').value};"
+          new="const cfg={sex:state.sex,heightCm:document.getElementById('heightCm').value,startWeight:document.getElementById('startWeight').value,goalWeight:document.getElementById('goalWeight').value,startWaist:document.getElementById('startWaist').value,goalWaist:document.getElementById('goalWaist').value};"
+          assert old in s
+          s=s.replace(old,new,1)
+
+          p.write_text(s)
+          PY
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "Show BMI22 excess weight" || exit 0
+          git push
