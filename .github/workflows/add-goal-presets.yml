@@ -1,0 +1,40 @@
+name: Add goal percentage presets
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/add-goal-presets.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Add presets
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+          css_old='.selectrow button.on{border-color:var(--orange);background:#fff0e5;color:#a94c0a}.recordlist'
+          css_new='.selectrow button.on{border-color:var(--orange);background:#fff0e5;color:#a94c0a}.goalpresets{margin-top:14px}.goalpresets label{display:block;font-size:12px;font-weight:700;margin-bottom:7px}.presetrow{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}.presetbtn{border:1px solid #e2d6cb;background:#fffaf6;border-radius:12px;padding:9px 3px;font-size:12px;font-weight:800;color:#6b5544}.presetbtn.on{border-color:var(--orange);background:#fff0e5;color:#a94c0a}.presetnote{font-size:11px;color:var(--muted);line-height:1.55;margin-top:7px}.recordlist'
+          if css_old not in s: raise SystemExit('CSS anchor not found')
+          s=s.replace(css_old,css_new,1)
+          html_old='<div class="goalgrid" style="margin-top:14px"><div class="field"><label>開始体重</label><div class="fieldbox"><input id="startWeight" type="number" inputmode="decimal" step="0.1" placeholder="例 80.0"><span class="unit">kg</span></div></div><div class="field"><label>3か月後の目標体重</label><div class="fieldbox"><input id="goalWeight" type="number" inputmode="decimal" step="0.1" placeholder="例 72.0"><span class="unit">kg</span></div></div><div class="field"><label>開始腹囲</label>'
+          html_new='<div class="goalgrid" style="margin-top:14px"><div class="field"><label>開始体重</label><div class="fieldbox"><input id="startWeight" type="number" inputmode="decimal" step="0.1" placeholder="例 80.0"><span class="unit">kg</span></div></div><div class="field"><label>3か月後の目標体重</label><div class="fieldbox"><input id="goalWeight" type="number" inputmode="decimal" step="0.1" placeholder="例 72.0"><span class="unit">kg</span></div></div></div><div class="goalpresets"><label>減量目標の目安</label><div class="presetrow" id="goalPresets"><button type="button" class="presetbtn" data-pct="5">5%</button><button type="button" class="presetbtn" data-pct="8">8%</button><button type="button" class="presetbtn" data-pct="10">10%</button><button type="button" class="presetbtn" data-pct="15">15%</button></div><div class="presetnote" id="presetNote">開始体重を入力して％をタップすると、3か月後の目標体重に自動反映します。</div></div><div class="goalgrid" style="margin-top:14px"><div class="field"><label>開始腹囲</label>'
+          if html_old not in s: raise SystemExit('HTML anchor not found')
+          s=s.replace(html_old,html_new,1)
+          js_old="function loadSettings(){const cfg=JSON.parse(localStorage.getItem('sdd-settings')||'{}');state.sex=cfg.sex||state.sex;document.getElementById('startWeight').value=cfg.startWeight||'';document.getElementById('goalWeight').value=cfg.goalWeight||'';document.getElementById('startWaist').value=cfg.startWaist||'';document.getElementById('goalWaist').value=cfg.goalWaist||'';document.querySelectorAll('#sexButtons button').forEach(b=>b.classList.toggle('on',b.dataset.sex===state.sex))}"
+          js_new=js_old+"\nfunction applyGoalPreset(pct){const start=Number(document.getElementById('startWeight').value);if(!start||start<=0){alert('先に開始体重を入力してください');document.getElementById('startWeight').focus();return}const goal=Math.round(start*(1-pct/100)*10)/10;document.getElementById('goalWeight').value=goal.toFixed(1);document.querySelectorAll('#goalPresets .presetbtn').forEach(b=>b.classList.toggle('on',Number(b.dataset.pct)===pct));document.getElementById('presetNote').textContent=`${pct}%減の目安：${start.toFixed(1)}kg → ${goal.toFixed(1)}kg（${(start-goal).toFixed(1)}kg減）`;}\ndocument.querySelectorAll('#goalPresets .presetbtn').forEach(b=>b.onclick=()=>applyGoalPreset(Number(b.dataset.pct)));document.getElementById('goalWeight').addEventListener('input',()=>document.querySelectorAll('#goalPresets .presetbtn').forEach(b=>b.classList.remove('on')));"
+          if js_old not in s: raise SystemExit('JS anchor not found')
+          s=s.replace(js_old,js_new,1)
+          p.write_text(s)
+          PY
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git diff --cached --quiet || git commit -m "Add tappable weight loss presets"
+          git push
