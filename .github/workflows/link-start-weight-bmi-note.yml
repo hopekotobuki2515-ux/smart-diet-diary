@@ -1,0 +1,42 @@
+name: Link start weight and BMI note
+on:
+  push:
+    paths:
+      - '.github/workflows/link-start-weight-bmi-note.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch index
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+          old='''<div class="goalgrid" style="margin-top:14px"><div class="field"><label>身長</label><div class="fieldbox"><input id="heightCm" type="number" inputmode="decimal" step="0.1" placeholder="例 170.0"><span class="unit">cm</span></div></div><div class="field"><label>開始体重</label><div class="fieldbox"><input id="startWeight" type="number" inputmode="decimal" step="0.1" placeholder="例 80.0"><span class="unit">kg</span></div></div></div><div id="bmi22Over" class="bmiover"></div>'''
+          new='''<div class="goalgrid" style="margin-top:14px"><div class="field"><label>身長</label><div class="fieldbox"><input id="heightCm" type="number" inputmode="decimal" step="0.1" placeholder="例 170.0"><span class="unit">cm</span></div></div><div class="field"><label>開始体重</label><div class="fieldbox"><input id="startWeight" type="number" inputmode="decimal" step="0.1" placeholder="例 80.0"><span class="unit">kg</span></div></div></div><div class="hint">（BMI22は、病気になりにくいとされる体格の目安です）</div><div id="bmi22Over" class="bmiover"></div>'''
+          assert old in s, 'settings height/start block not found'
+          s=s.replace(old,new,1)
+
+          old2="""document.getElementById('weightInput').addEventListener('change',()=>persistDay(false));"""
+          new2="""document.getElementById('weightInput').addEventListener('change',()=>{persistDay(false);const w=document.getElementById('weightInput').value;if(w){const cfg=JSON.parse(localStorage.getItem('sdd-settings')||'{}');if(!cfg.startWeight){cfg.startWeight=w;cfg.sex=cfg.sex||state.sex;localStorage.setItem('sdd-settings',JSON.stringify(cfg));document.getElementById('startWeight').value=w;updateBmi22Over()}}});"""
+          assert old2 in s, 'weight change handler not found'
+          s=s.replace(old2,new2,1)
+
+          old3="""document.querySelectorAll('#sexButtons button').forEach(b=>b.onclick=()=>{state.sex=b.dataset.sex;document.querySelectorAll('#sexButtons button').forEach(x=>x.classList.toggle('on',x===b))});document.getElementById('saveSettings').onclick=()=>{const cfg={sex:state.sex,heightCm:document.getElementById('heightCm').value,startWeight:document.getElementById('startWeight').value,goalWeight:document.getElementById('goalWeight').value,startWaist:document.getElementById('startWaist').value,goalWaist:document.getElementById('goalWaist').value};localStorage.setItem('sdd-settings',JSON.stringify(cfg));localStorage.setItem('sdd-sex',state.sex);alert('設定を保存しました')};"""
+          new3="""document.querySelectorAll('#sexButtons button').forEach(b=>b.onclick=()=>{state.sex=b.dataset.sex;document.querySelectorAll('#sexButtons button').forEach(x=>x.classList.toggle('on',x===b))});document.getElementById('saveSettings').onclick=()=>{const cfg={sex:state.sex,heightCm:document.getElementById('heightCm').value,startWeight:document.getElementById('startWeight').value,goalWeight:document.getElementById('goalWeight').value,startWaist:document.getElementById('startWaist').value,goalWaist:document.getElementById('goalWaist').value};localStorage.setItem('sdd-settings',JSON.stringify(cfg));localStorage.setItem('sdd-sex',state.sex);const d=dayData();if(!d.weight&&cfg.startWeight){d.weight=cfg.startWeight;document.getElementById('weightInput').value=cfg.startWeight;localStorage.setItem('sdd-'+keyDate(current),JSON.stringify(d))}alert('設定を保存しました')};"""
+          assert old3 in s, 'save settings handler not found'
+          s=s.replace(old3,new3,1)
+          p.write_text(s)
+          PY
+      - name: Commit changes
+        run: |
+          if git diff --quiet; then exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "Link start weight and add BMI22 note"
+          git push
