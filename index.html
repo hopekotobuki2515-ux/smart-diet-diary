@@ -8,20 +8,20 @@
 <style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#fffaf5}#appFrame{position:fixed;inset:0;width:100%;height:100dvh;border:0;background:#fffaf5}</style>
 </head>
 <body>
-<iframe id="appFrame" src="legacy.html?v=20260823k"></iframe>
+<iframe id="appFrame" src="legacy.html?v=20260823m"></iframe>
 <script>
 const frame=document.getElementById('appFrame');
 frame.addEventListener('load',()=>{
   try{
     const doc=frame.contentDocument;
     const shell=doc.createElement('script');
-    shell.src='app-shell.js?v=20260823k';
+    shell.src='app-shell.js?v=20260823m';
     shell.onload=()=>{
       const fix=doc.createElement('script');
-      fix.src='ui-hotfix.js?v=20260823k';
+      fix.src='ui-hotfix.js?v=20260823m';
       fix.onload=()=>{
         const photo=doc.createElement('script');
-        photo.src='photo-hotfix.js?v=20260823k';
+        photo.src='photo-hotfix.js?v=20260823m';
         doc.body.appendChild(photo);
       };
       doc.body.appendChild(fix);
