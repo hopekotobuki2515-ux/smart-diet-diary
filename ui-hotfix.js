@@ -7,6 +7,7 @@
     .breakItems{gap:10px!important;padding:10px 10px 12px!important}
     .subItem{min-width:82px!important;padding:10px 8px 56px!important}
     .subItem .num{display:flex!important;justify-content:center!important;align-items:baseline!important;gap:2px!important;min-height:30px!important;line-height:1!important}
+    .breakGroup:not(.g4) .subItem .unit{display:none!important}
     .subItem .minus{left:50%!important;bottom:7px!important;transform:translateX(-50%)!important;width:46px!important;height:46px!important;line-height:46px!important;font-size:25px!important;background:#fff!important;border:2px solid currentColor!important;box-shadow:0 2px 7px rgba(0,0,0,.08)!important;touch-action:manipulation!important}
     .breakGroup.g1 .subItem .minus{color:var(--c1)!important}
     .breakGroup.g2 .subItem .minus{color:var(--c2)!important}
