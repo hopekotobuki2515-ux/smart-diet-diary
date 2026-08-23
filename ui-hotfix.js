@@ -22,6 +22,7 @@
     .groupCard .emoji{font-size:24px!important;line-height:1.15!important;margin-top:4px!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:4px!important}
     .foodOilIcon{display:inline-flex!important;align-items:center!important;justify-content:center!important;width:27px!important;height:27px!important;vertical-align:middle!important}
     .foodOilIcon svg{display:block!important;width:100%!important;height:100%!important}
+    #meals .g3box{display:none!important}
     @media (max-width:390px){
       .breakGroup{grid-template-columns:112px 1fr!important}
       .subItem{min-width:78px!important}
@@ -61,7 +62,17 @@
     }catch(e){console.error('g3 sync',e)}
   }
 
-  function syncUi(){syncCompactG3();syncIcons();}
+  function reorderDiary(){
+    try{
+      const mealsSection=document.getElementById('meals')?.closest('.section');
+      const detailedG3=document.querySelector('#todayView .g3support')?.closest('.section');
+      if(mealsSection&&detailedG3&&mealsSection.nextElementSibling!==detailedG3){
+        mealsSection.insertAdjacentElement('afterend',detailedG3);
+      }
+    }catch(e){console.error('diary reorder',e)}
+  }
+
+  function syncUi(){syncCompactG3();syncIcons();reorderDiary();}
 
   if(typeof window.render==='function'){
     const baseRender=window.render;
