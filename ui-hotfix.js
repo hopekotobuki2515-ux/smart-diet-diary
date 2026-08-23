@@ -19,7 +19,12 @@
     .breakHead b{font-size:21px!important;line-height:1.05!important}
     .breakHead span{font-size:12px!important;margin-top:5px!important}
     .breakHead .icons{font-size:26px!important;line-height:1.15!important;margin-top:7px!important;letter-spacing:2px!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:6px!important}
-    .groupCard .emoji{font-size:24px!important;line-height:1.15!important;margin-top:4px!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:4px!important}
+    .groupSummary{align-items:stretch!important}
+    .groupCard{display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:flex-start!important;min-height:178px!important;padding:10px 3px 10px!important}
+    .groupCard strong{min-height:22px!important;display:flex!important;align-items:center!important;justify-content:center!important}
+    .groupCard small{min-height:28px!important;display:flex!important;align-items:center!important;justify-content:center!important;margin:3px 0 5px!important;text-align:center!important}
+    .groupCard .emoji{font-size:24px!important;line-height:1.15!important;margin-top:2px!important;min-height:58px!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:4px!important;flex-wrap:wrap!important}
+    .groupCard b{margin-top:auto!important;min-height:24px!important;display:flex!important;align-items:flex-end!important;justify-content:center!important;white-space:nowrap!important}
     .foodOilIcon{display:inline-flex!important;align-items:center!important;justify-content:center!important;width:27px!important;height:27px!important;vertical-align:middle!important}
     .foodOilIcon svg{display:block!important;width:100%!important;height:100%!important}
     #meals .g3box{display:none!important}
@@ -29,6 +34,8 @@
       .subItem .minus{width:48px!important;height:48px!important;line-height:48px!important}
       .breakHead b{font-size:20px!important}
       .breakHead .icons{font-size:25px!important}
+      .groupCard{min-height:174px!important}
+      .groupCard .emoji{min-height:56px!important;font-size:23px!important}
     }
   `;
   document.head.appendChild(style);
