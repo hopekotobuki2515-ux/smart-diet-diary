@@ -1,0 +1,48 @@
+name: Improve taps and calendar
+on:
+  push:
+    paths:
+      - '.github/workflows/improve-taps-calendar.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch index.html
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+
+          old_css=".recordlist{display:flex;flex-direction:column;gap:8px}.recordday{border:1px solid #eadfd5;background:#fff;border-radius:13px;padding:12px;text-align:left}.recordday strong{display:block}.recordday small{color:#777}.empty{padding:18px;text-align:center;color:#888}"
+          new_css=".recordlist{display:flex;flex-direction:column;gap:8px}.recordday{border:1px solid #eadfd5;background:#fff;border-radius:13px;padding:12px;text-align:left}.recordday strong{display:block}.recordday small{color:#777}.empty{padding:18px;text-align:center;color:#888}.calhead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:8px 0 12px}.calhead button{border:0;background:#fff4e8;color:#7b4a24;border-radius:11px;width:40px;height:40px;font-size:20px;font-weight:800}.calmonth{font-size:17px;font-weight:900}.calgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}.caldow{text-align:center;font-size:10px;color:#8a7b70;font-weight:800;padding:3px 0}.calday{position:relative;aspect-ratio:1/1;border:1px solid #eee2d7;background:#fff;border-radius:12px;padding:5px 2px;text-align:center;font-size:13px;font-weight:800;color:#4e443c}.calday.blank{visibility:hidden}.calday.today{border:2px solid var(--orange);color:#b95410;background:#fff8f1}.calday.recorded{background:#fff0e5;border-color:#f0b27e}.calday.recorded::after{content:'';position:absolute;left:50%;bottom:5px;transform:translateX(-50%);width:5px;height:5px;border-radius:50%;background:var(--orange)}.calday .calmeta{display:block;font-size:8px;color:#8a7b70;font-weight:700;margin-top:2px;line-height:1.05}.callegend{display:flex;gap:12px;align-items:center;margin:10px 2px 2px;font-size:10px;color:#777}.caldot{width:7px;height:7px;border-radius:50%;background:var(--orange);display:inline-block;margin-right:4px}.recenttitle{font-size:13px;font-weight:800;margin:16px 0 8px;color:#6b5544}button,.grp,.chip,.photo,.recordday,.calday{touch-action:manipulation;-webkit-tap-highlight-color:transparent}"
+          if old_css not in s: raise SystemExit('calendar css anchor not found')
+          s=s.replace(old_css,new_css,1)
+
+          old_html='<main id="calendarView" class="view">\n<section class="section"><div class="card panel"><h2 class="paneltitle">カレンダー</h2><p class="subtle">記録した日を一覧で確認できます。</p><div id="recordList" class="recordlist"></div></div></section>\n</main>'
+          new_html='<main id="calendarView" class="view">\n<section class="section"><div class="card panel"><h2 class="paneltitle">カレンダー</h2><p class="subtle">記録した日を月ごとに確認できます。日付をタップすると、その日の記録が開きます。</p><div class="calhead"><button type="button" id="prevMonth" aria-label="前の月">‹</button><div class="calmonth" id="calendarMonth"></div><button type="button" id="nextMonth" aria-label="次の月">›</button></div><div class="calgrid" id="calendarGrid"></div><div class="callegend"><span><i class="caldot"></i>記録あり</span><span>オレンジ枠＝今日</span></div><div class="recenttitle">最近の記録</div><div id="recordList" class="recordlist"></div></div></section>\n</main>'
+          if old_html not in s: raise SystemExit('calendar html anchor not found')
+          s=s.replace(old_html,new_html,1)
+
+          old_fn="function renderCalendar(){const list=document.getElementById('recordList'),dates=savedDates().reverse();if(!dates.length){list.innerHTML='<div class=\"empty\">まだ記録がありません。</div>';return}list.innerHTML=dates.map(k=>{const d=loadByDate(k);return `<button class=\"recordday\" data-date=\"${k}\"><strong>${k.replaceAll('-','/')}</strong><small>${d.weight?`体重 ${d.weight}kg　`:''}${d.waist?`腹囲 ${d.waist}cm`:''}</small></button>`}).join('');list.querySelectorAll('[data-date]').forEach(b=>b.onclick=()=>{const [y,m,d]=b.dataset.date.split('-').map(Number);current=new Date(y,m-1,d,12);switchView('todayView');render()})}"
+          new_fn="let calendarCursor=new Date();calendarCursor.setDate(1);calendarCursor.setHours(12,0,0,0);\nfunction openCalendarDate(k){const [y,m,d]=k.split('-').map(Number);current=new Date(y,m-1,d,12);switchView('todayView');render()}\nfunction renderCalendar(){const grid=document.getElementById('calendarGrid'),list=document.getElementById('recordList'),dates=savedDates(),dateSet=new Set(dates),y=calendarCursor.getFullYear(),m=calendarCursor.getMonth(),first=new Date(y,m,1),lastDay=new Date(y,m+1,0).getDate(),todayKey=keyDate(new Date());document.getElementById('calendarMonth').textContent=`${y}年 ${m+1}月`;let html=['日','月','火','水','木','金','土'].map(x=>`<div class=\"caldow\">${x}</div>`).join('');for(let i=0;i<first.getDay();i++)html+='<div class=\"calday blank\"></div>';for(let d=1;d<=lastDay;d++){const k=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`,rec=dateSet.has(k),day=rec?loadByDate(k):null,meta=rec?(day.weight?`${day.weight}kg`:day.waist?`${day.waist}cm`:'●'):'';html+=`<button type=\"button\" class=\"calday ${rec?'recorded':''} ${k===todayKey?'today':''}\" data-caldate=\"${k}\">${d}${meta?`<span class=\"calmeta\">${meta}</span>`:''}</button>`}grid.innerHTML=html;grid.querySelectorAll('[data-caldate]').forEach(b=>b.onclick=()=>openCalendarDate(b.dataset.caldate));const recent=dates.slice().reverse().slice(0,6);if(!recent.length){list.innerHTML='<div class=\"empty\">まだ記録がありません。</div>'}else{list.innerHTML=recent.map(k=>{const d=loadByDate(k);return `<button class=\"recordday\" data-date=\"${k}\"><strong>${k.replaceAll('-','/')}</strong><small>${d.weight?`体重 ${d.weight}kg　`:''}${d.waist?`腹囲 ${d.waist}cm`:''}</small></button>`}).join('');list.querySelectorAll('[data-date]').forEach(b=>b.onclick=()=>openCalendarDate(b.dataset.date))}}\ndocument.getElementById('prevMonth').onclick=()=>{calendarCursor.setMonth(calendarCursor.getMonth()-1);renderCalendar()};document.getElementById('nextMonth').onclick=()=>{calendarCursor.setMonth(calendarCursor.getMonth()+1);renderCalendar()};"
+          if old_fn not in s: raise SystemExit('renderCalendar anchor not found')
+          s=s.replace(old_fn,new_fn,1)
+
+          anchor="document.getElementById('openGuide').onclick=()=>{document.documentElement.style.setProperty('--guideTop',document.querySelector('.hero').offsetHeight+'px');switchView('guideView');const g=document.getElementById('guideView');g.scrollTop=0;requestAnimationFrame(()=>{g.scrollTop=0})};"
+          replacement="document.addEventListener('dblclick',e=>{if(e.target.closest('button,.grp,.chip,.photo,.recordday,.calday'))e.preventDefault()},{passive:false});\n"+anchor
+          if anchor not in s: raise SystemExit('tap anchor not found')
+          s=s.replace(anchor,replacement,1)
+          p.write_text(s)
+          PY
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git diff --cached --quiet && exit 0
+          git commit -m "Improve tap behavior and calendar"
+          git push
