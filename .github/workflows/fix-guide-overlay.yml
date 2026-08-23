@@ -1,0 +1,37 @@
+name: Fix guide overlay scroll behavior
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-guide-overlay.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch guide view into independent overlay
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+          old_css='.backGuide{width:100%;border:0;background:#f3eee9;color:#6b5544;border-radius:12px;padding:11px;font-weight:800}.view{display:none}.view.active{display:block}'
+          new_css='.backGuide{width:100%;border:0;background:#f3eee9;color:#6b5544;border-radius:12px;padding:11px;font-weight:800}.view{display:none}.view.active{display:block}#guideView.active{position:fixed;left:50%;transform:translateX(-50%);top:var(--guideTop,96px);bottom:calc(48px + env(safe-area-inset-bottom));width:min(520px,100%);max-width:520px;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;background:var(--bg);z-index:19;padding-bottom:24px}#guideView>.section{padding-top:14px}'
+          if old_css not in s:
+              raise SystemExit('css anchor not found')
+          s=s.replace(old_css,new_css,1)
+          old="document.getElementById('openGuide').onclick=()=>{switchView('guideView');requestAnimationFrame(()=>{const g=document.getElementById('guideView');g.scrollIntoView({block:'start',behavior:'auto'});window.scrollBy(0,-document.querySelector('.hero').offsetHeight)})};document.getElementById('closeGuide').onclick=()=>{switchView('todayView');requestAnimationFrame(()=>document.getElementById('todayView').scrollIntoView({block:'start',behavior:'auto'}))};"
+          new="document.getElementById('openGuide').onclick=()=>{document.documentElement.style.setProperty('--guideTop',document.querySelector('.hero').offsetHeight+'px');switchView('guideView');const g=document.getElementById('guideView');g.scrollTop=0;requestAnimationFrame(()=>{g.scrollTop=0})};document.getElementById('closeGuide').onclick=()=>{document.getElementById('guideView').scrollTop=0;switchView('todayView')};"
+          if old not in s:
+              raise SystemExit('handler anchor not found')
+          s=s.replace(old,new,1)
+          p.write_text(s)
+          PY
+      - name: Commit
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add index.html
+          git diff --cached --quiet || git commit -m "Fix guide view as independent scroll overlay"
+          git push
