@@ -1,0 +1,59 @@
+name: Add morning health dropdown
+on:
+  push:
+    paths:
+      - '.github/workflows/add-morning-health-dropdown.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch index.html
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+
+          css=""".morningPrompt{padding:16px;margin-top:12px;background:linear-gradient(135deg,#fff7ec,#fff);border:1px solid #f0d8bf;animation:morningPop .32s ease-out}.morningPrompt h2{font-size:18px;margin:0 0 7px}.morningPrompt p{font-size:13px;line-height:1.65;margin:0;color:#6b5544}.morningActions{display:flex;gap:8px;margin-top:12px}.morningActions button{flex:1;border:0;border-radius:12px;padding:10px 8px;font-weight:800}.morningMain{background:var(--orange);color:#fff}.morningLater{background:#f3eee9;color:#6b5544}@keyframes morningPop{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}.healthtoggle{width:100%;border:0;background:transparent;padding:0;display:flex;align-items:center;justify-content:space-between;gap:10px;text-align:left;color:inherit}.healthtoggle strong{font-size:18px}.healthchev{font-size:18px;color:#8a6f5a;transition:transform .2s ease}.healthtoggle[aria-expanded=\"true\"] .healthchev{transform:rotate(180deg)}.healthbody{margin-top:8px}.healthbody[hidden]{display:none!important}"""
+          if '.morningPrompt{' not in s:
+              s=s.replace('</style>',css+'</style>')
+
+          date_section='<section class="section"><div class="datebar"><button id="prevDay">‹</button><strong id="dateLabel"></strong><button id="nextDay">›</button></div></section>'
+          prompt='''<section class="section" id="morningPrompt" style="display:none"><div class="card morningPrompt"><h2>おはようございます！！</h2><p><strong>今日の体調はいかがですか？</strong><br>今日も楽しく健康生活を目指しましょう！！</p><div class="morningActions"><button type="button" class="morningMain" id="openHealth">体調をチェックする</button><button type="button" class="morningLater" id="morningLater">あとで</button></div></div></section>'''
+          if 'id="morningPrompt"' not in s:
+              s=s.replace(date_section,date_section+'\n'+prompt,1)
+
+          old='''<section class="section"><div class="card healthcheck"><h2>水分・お通じ・体調</h2><div class="healthnote">分かる範囲で、その日の状態を簡単に記録できます。</div><div class="healthrow"><div class="healthlabel"><span>水分摂取量</span><strong class="healthvalue" id="waterTotal">0mL</strong></div><div class="healthbuttons"><button type="button" data-water="-250">−250mL</button><button type="button" data-water="250">＋250mL</button><button type="button" data-water="500">＋500mL</button></div></div><div class="healthrow"><div class="healthlabel"><span>お通じ</span></div><div class="healthbuttons" id="bowelButtons"><button type="button" data-bowel="none">なし</button><button type="button" data-bowel="once">1回</button><button type="button" data-bowel="twoplus">2回以上</button></div></div><div class="healthrow"><div class="healthlabel"><span>体調</span></div><div class="healthbuttons" id="conditionButtons"><button type="button" data-condition="good">良い</button><button type="button" data-condition="normal">ふつう</button><button type="button" data-condition="poor">いまいち</button></div></div></div></section>'''
+          new='''<section class="section"><div class="card healthcheck"><button type="button" class="healthtoggle" id="healthToggle" aria-expanded="false"><strong>水分・お通じ・体調</strong><span class="healthchev">⌄</span></button><div class="healthbody" id="healthBody" hidden><div class="healthnote">分かる範囲で、その日の状態を簡単に記録できます。</div><div class="healthrow"><div class="healthlabel"><span>水分摂取量</span><strong class="healthvalue" id="waterTotal">0mL</strong></div><div class="healthbuttons"><button type="button" data-water="-250">−250mL</button><button type="button" data-water="250">＋250mL</button><button type="button" data-water="500">＋500mL</button></div></div><div class="healthrow"><div class="healthlabel"><span>お通じ</span></div><div class="healthbuttons" id="bowelButtons"><button type="button" data-bowel="none">なし</button><button type="button" data-bowel="once">1回</button><button type="button" data-bowel="twoplus">2回以上</button></div></div><div class="healthrow"><div class="healthlabel"><span>体調</span></div><div class="healthbuttons" id="conditionButtons"><button type="button" data-condition="good">良い</button><button type="button" data-condition="normal">ふつう</button><button type="button" data-condition="poor">いまいち</button></div></div></div></div></section>'''
+          if old in s:
+              s=s.replace(old,new,1)
+
+          marker="function renderHealth(d){document.getElementById('waterTotal').textContent=`${Number(d.water)||0}mL`;document.querySelectorAll('[data-bowel]').forEach(b=>b.classList.toggle('on',b.dataset.bowel===d.bowel));document.querySelectorAll('[data-condition]').forEach(b=>b.classList.toggle('on',b.dataset.condition===d.condition))}"
+          addon="""
+function setHealthOpen(open){const body=document.getElementById('healthBody'),toggle=document.getElementById('healthToggle');if(!body||!toggle)return;body.hidden=!open;toggle.setAttribute('aria-expanded',open?'true':'false')}
+function markMorningSeen(){localStorage.setItem('sdd-morning-seen',keyDate(new Date()))}
+function initMorningPrompt(){const box=document.getElementById('morningPrompt');if(!box)return;const today=keyDate(new Date()),isToday=keyDate(current)===today,seen=localStorage.getItem('sdd-morning-seen')===today;box.style.display=(isToday&&!seen)?'block':'none'}
+"""
+          if 'function setHealthOpen(open)' not in s:
+              s=s.replace(marker,marker+addon,1)
+
+          endmarker="document.getElementById('openGuide').onclick=()=>{document.documentElement.style.setProperty('--guideTop',document.querySelector('.hero').offsetHeight+'px');switchView('guideView');const g=document.getElementById('guideView');g.scrollTop=0;requestAnimationFrame(()=>{g.scrollTop=0})};"
+          handlers="""document.getElementById('healthToggle').onclick=()=>setHealthOpen(document.getElementById('healthBody').hidden);document.getElementById('openHealth').onclick=()=>{setHealthOpen(true);markMorningSeen();document.getElementById('morningPrompt').style.display='none';requestAnimationFrame(()=>document.getElementById('healthToggle').scrollIntoView({behavior:'smooth',block:'center'}))};document.getElementById('morningLater').onclick=()=>{markMorningSeen();document.getElementById('morningPrompt').style.display='none'};
+"""
+          if "document.getElementById('healthToggle').onclick" not in s:
+              s=s.replace(endmarker,handlers+endmarker,1)
+
+          s=s.replace("switchView('todayView');loadSettings();", "switchView('todayView');loadSettings();initMorningPrompt();",1)
+          p.write_text(s)
+          PY
+      - name: Commit changes
+        run: |
+          if git diff --quiet; then exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "Add morning health prompt and dropdown"
+          git push
