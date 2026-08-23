@@ -20,4 +20,39 @@
     }
   `;
   document.head.appendChild(style);
+
+  function syncCompactG3(){
+    try{
+      if(typeof dayData!=='function') return;
+      const d=dayData();
+      const g=d.g3||{green:0,light:0,mush:0};
+      const green=Math.max(0,Number(g.green)||0);
+      const light=Math.max(0,Number(g.light)||0);
+      const mush=Math.max(0,Number(g.mush)||0);
+      const veg=green+light;
+      document.querySelectorAll('.g3box .g3m').forEach(card=>{
+        const label=(card.querySelector('small')?.textContent||'').trim();
+        const value=card.querySelector('b');
+        if(!value) return;
+        if(label.includes('野菜合計')) value.textContent=`${veg}g`;
+        else if(label.includes('緑黄色野菜')) value.textContent=`${green}g`;
+        else if(label.includes('きのこ')||label.includes('海藻')) value.textContent=`${mush}g`;
+      });
+    }catch(e){console.error('g3 sync',e)}
+  }
+
+  if(typeof window.render==='function'){
+    const baseRender=window.render;
+    window.render=function(){
+      const result=baseRender.apply(this,arguments);
+      requestAnimationFrame(syncCompactG3);
+      return result;
+    };
+  }
+
+  document.addEventListener('click',e=>{
+    if(e.target.closest('[data-g3],#resetG3')) setTimeout(syncCompactG3,0);
+  },true);
+
+  syncCompactG3();
 })();
