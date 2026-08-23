@@ -8,48 +8,17 @@
 <style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#fffaf5}#appFrame{position:fixed;inset:0;width:100%;height:100dvh;border:0;background:#fffaf5}</style>
 </head>
 <body>
-<iframe id="appFrame" src="legacy.html"></iframe>
-<script id="inject" type="text/plain">
-(()=>{
-const extra=document.createElement('style');extra.textContent=`
-.mealTabs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0}
-.mealTab{border:1px solid var(--line);background:#fff;border-radius:14px;padding:11px 4px 9px;font-size:13px;font-weight:900;color:#5f5147;min-height:58px;touch-action:manipulation}
-.mealTab.active{border:2px solid var(--orange);background:#fff5eb;color:#a94c0a}
-.mealTabStatus{display:flex;justify-content:center;gap:3px;margin-top:6px}
-.mealTabDot{width:14px;height:14px;border-radius:50%;font-size:8px;display:grid;place-items:center;font-weight:900;color:#8b8076;background:#f1ece7}
-.mealTabDot.on.g1{background:var(--g1);color:#333}.mealTabDot.on.g2{background:var(--g2);color:#333}.mealTabDot.on.g3{background:var(--g3);color:#333}.mealTabDot.on.g4{background:var(--g4);color:#333}
-.mealWorkspace{padding:14px;margin-top:10px}.mealWorkspace h2{margin:0 0 10px;font-size:18px}
-.guideWheelWrap{padding:14px}.guideWheel{position:relative;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;width:min(330px,90vw);aspect-ratio:1;margin:6px auto 14px;border-radius:50%;overflow:hidden;border:6px solid #fff;box-shadow:0 4px 18px rgba(70,45,20,.10)}
-.guideQuad{border:0;font-weight:900;font-size:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;touch-action:manipulation}.guideQuad small{font-size:11px;font-weight:700}.guideQuad.g1{background:var(--g1)}.guideQuad.g2{background:var(--g2)}.guideQuad.g3{background:var(--g3)}.guideQuad.g4{background:var(--g4)}
-.guideWheelCenter{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:112px;height:112px;border-radius:50%;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;font-weight:900;box-shadow:0 3px 12px rgba(70,45,20,.10);pointer-events:none}.guideWheelCenter b{font-size:18px}.guideWheelCenter span{font-size:11px;color:#777;margin-top:3px}
-.guideDetail{border:1px solid var(--line);border-radius:16px;padding:14px;background:#fff}.guideDetail h3{margin:0 0 8px;font-size:18px}.guideDetail p{margin:6px 0;font-size:13px;line-height:1.65}.guideHint{font-size:11px;color:#777;margin-top:8px}
-`;
-document.head.appendChild(extra);
-window.__activeMealId='breakfast';
-render=function(){
- document.getElementById('dateLabel').textContent=fmt(current);const d=dayData();document.getElementById('weightInput').value=d.weight;document.getElementById('waistInput').value=d.waist;const wrap=document.getElementById('meals');
- const tabs=`<div class="mealTabs">${mealDefs.map(([id,label])=>{const m=d[id];return `<button type="button" class="mealTab ${window.__activeMealId===id?'active':''}" data-mealtab="${id}">${label}<span class="mealTabStatus">${[1,2,3,4].map(g=>{const on=g<4?(Number(m.groupCounts?.[g])||0)>0:m.groups.includes(4);return `<i class="mealTabDot g${g} ${on?'on':''}">${g}</i>`}).join('')}</span></button>`}).join('')}</div>`;
- const found=mealDefs.find(x=>x[0]===window.__activeMealId)||mealDefs[0],id=found[0],label=found[1],m=d[id];
- wrap.innerHTML=tabs+`<div class="card mealWorkspace"><h2>${label}</h2><img class="preview" ${m.img?`src="${m.img}" style="display:block"`:''}><label class="photo">📷 ${m.img?'写真を変更':'写真を追加'}<input type="file" accept="image/*" capture="environment" hidden></label><div class="groups">${[1,2,3,4].map(g=>g<4?`<div class="grp g${g} ${(Number(m.groupCounts?.[g])||0)>0?'on':''}" data-g="${g}">${g}群<small>${['','乳・卵','魚・肉・豆','野菜など'][g]}</small><div class="groupcounter"><button type="button" data-count-step="-1" data-count-g="${g}">−</button><b>${Number(m.groupCounts?.[g])||0}</b><button type="button" data-count-step="1" data-count-g="${g}">＋</button></div></div>`:`<div class="grp g4 ${m.groups.includes(4)?'on':''}" data-g="4">4群<small>主食・油など</small></div>`).join('')}</div><div class="sub3 ${m.groups.includes(3)?'open':''}"><div class="hint" style="margin:0 0 8px">3群の中身（複数選択可）</div><div class="chips">${['緑黄色野菜','淡色野菜','きのこ・海藻','いも','果物'].map(x=>`<button class="chip ${m.sub3.includes(x)?'on':''}" data-sub="${x}">${x}</button>`).join('')}</div></div><div class="point4 ${m.groups.includes(4)?'open':''}"><div class="pointrow"><div><strong>4群の点数</strong><div class="hint">1点＝80kcal</div></div><div class="stepper"><button data-step="-0.5">−</button><span class="point">${Number(m.p4).toFixed(1)}</span><button data-step="0.5">＋</button></div></div><div class="hold4"><div class="holdrow"><span>分類に迷う → 判定保留</span><div class="holdcounter"><button type="button" data-hold-step="-1">−</button><b>${Number(m.hold4Count)||0}</b><button type="button" data-hold-step="1">＋</button></div></div></div><div class="hint">判定保留は何品でも記録できます。4群の点数・偏り判定には含めません。</div><details class="pointguide"><summary>4群の1点目安を見る</summary><div class="guidebox"><strong>まず見るのは「エネルギー（kcal）」</strong><br>市販品は栄養成分表示を確認し、<strong>80kcal＝1点</strong>として換算します。<div class="guidecalc"><span>40kcal<br>0.5点</span><span>80kcal<br>1点</span><span>120kcal<br>1.5点</span><span>160kcal<br>2点</span><span>200kcal<br>2.5点</span><span>240kcal<br>3点</span></div></div></details></div></div>`;
- wrap.querySelectorAll('[data-mealtab]').forEach(b=>b.onclick=()=>{window.__activeMealId=b.dataset.mealtab;render()});
- const input=wrap.querySelector('input[type=file]');input.onchange=e=>{const f=e.target.files[0];if(f)compress(f,x=>{m.img=x;render()})};
- wrap.querySelectorAll('.grp').forEach(b=>b.onclick=e=>{const g=+b.dataset.g;if(e.target.closest('[data-count-step]'))return;if(g===4){m.groups=m.groups.includes(4)?m.groups.filter(x=>x!==4):[...m.groups,4];if(!m.groups.includes(4))m.p4=0}else{const has4=m.groups.includes(4);m.groupCounts[g]=(Number(m.groupCounts?.[g])||0)>0?0:1;m.groups=[1,2,3].filter(x=>(Number(m.groupCounts?.[x])||0)>0);if(has4)m.groups.push(4)}render()});
- wrap.querySelectorAll('[data-count-step]').forEach(b=>b.onclick=e=>{e.stopPropagation();const g=+b.dataset.countG,step=+b.dataset.countStep;m.groupCounts[g]=Math.max(0,(Number(m.groupCounts?.[g])||0)+step);const has4=m.groups.includes(4);m.groups=[1,2,3].filter(x=>(Number(m.groupCounts?.[x])||0)>0);if(has4)m.groups.push(4);render()});
- wrap.querySelectorAll('[data-hold-step]').forEach(b=>b.onclick=()=>{m.hold4Count=Math.max(0,(Number(m.hold4Count)||0)+(+b.dataset.holdStep));render()});
- wrap.querySelectorAll('.chip').forEach(b=>b.onclick=()=>{const x=b.dataset.sub;m.sub3=m.sub3.includes(x)?m.sub3.filter(v=>v!==x):[...m.sub3,x];render()});
- wrap.querySelectorAll('[data-step]').forEach(b=>b.onclick=()=>{m.p4=Math.max(0,Math.round((Number(m.p4)+(+b.dataset.step))*2)/2);render()});
- renderHealth(d);renderG3Support(d);const sum=renderBalance(document.getElementById('balance'),d);const a=document.getElementById('advice');a.textContent=sum.txt;a.className='advice '+sum.cls
-};
-const guide=document.getElementById('guideView');guide.innerHTML=`<section class="section"><div class="card guideWheelWrap"><h2 style="margin:0 0 6px">四群点数法の見方</h2><p class="subtle">色の部分をタップすると、その群のポイントが表示されます。</p><div class="guideWheel"><button type="button" class="guideQuad g1" data-guidegroup="1">第1群<small>乳・卵など</small></button><button type="button" class="guideQuad g2" data-guidegroup="2">第2群<small>魚・肉・豆など</small></button><button type="button" class="guideQuad g3" data-guidegroup="3">第3群<small>野菜など</small></button><button type="button" class="guideQuad g4" data-guidegroup="4">第4群<small>主食・油など</small></button><div class="guideWheelCenter"><b>1点＝80kcal</b><span>4つの群で確認</span></div></div><div id="guideDetail" class="guideDetail"><h3>第1群</h3><p><strong>食品</strong>：乳・乳製品・卵など</p><p><strong>主な栄養</strong>：たんぱく質・カルシウム・ビタミンB2など</p><p class="guideHint">骨や歯、体をつくる材料を補う群です。</p></div></div><div class="card guidecard"><h2>3群の目安</h2><ul><li>野菜は1日350gを目安に。</li><li>緑黄色野菜は120g以上を目安にし、残りを淡色野菜で補います。</li><li>きのこ・海藻類は30〜40g/日を目安として記録できます。</li></ul><p class="hint">量が分からない外食や複合料理は、無理にグラム換算せず写真と群分けだけでもOKです。</p></div><button type="button" class="backGuide" id="closeGuide">今日に戻る</button></section>`;
-const guideData={1:['第1群','乳・乳製品・卵など','たんぱく質・カルシウム・ビタミンB2など','骨や歯、体をつくる材料を補う群です。'],2:['第2群','魚・肉・豆・豆製品など','たんぱく質・鉄・ビタミンB群など','筋肉や血液など、体をつくる材料になる群です。'],3:['第3群','野菜・きのこ・海藻・いも・果物など','ビタミン・ミネラル・食物繊維など','体の調子を整える働きを支える群です。'],4:['第4群','ご飯・パン・麺・油・砂糖・菓子・調味料など','炭水化物・脂質など','主なエネルギー源になる群です。とり過ぎに注意して調整します。']};
-document.querySelectorAll('[data-guidegroup]').forEach(b=>b.onclick=()=>{const x=guideData[b.dataset.guidegroup],box=document.getElementById('guideDetail');box.innerHTML=`<h3>${x[0]}</h3><p><strong>食品</strong>：${x[1]}</p><p><strong>主な栄養</strong>：${x[2]}</p><p class="guideHint">${x[3]}</p>`});
-const oldOpen=document.getElementById('openGuide'),newOpen=oldOpen.cloneNode(true);oldOpen.replaceWith(newOpen);newOpen.onclick=()=>{document.documentElement.style.setProperty('--guideTop',document.querySelector('.hero').offsetHeight+'px');switchView('guideView');guide.scrollTop=0};
-document.getElementById('closeGuide').onclick=()=>{guide.scrollTop=0;switchView('todayView')};
-render();
-})();
-</script>
+<iframe id="appFrame" src="legacy.html?v=20260823a"></iframe>
 <script>
-const frame=document.getElementById('appFrame');frame.addEventListener('load',()=>{try{frame.contentWindow.eval(document.getElementById('inject').textContent)}catch(e){console.error(e)}});
+const frame=document.getElementById('appFrame');
+frame.addEventListener('load',()=>{
+  try{
+    const doc=frame.contentDocument;
+    const s=doc.createElement('script');
+    s.src='app-shell.js?v=20260823a';
+    doc.body.appendChild(s);
+  }catch(e){console.error(e)}
+});
 </script>
 </body>
 </html>
