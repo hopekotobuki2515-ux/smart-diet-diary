@@ -1,0 +1,65 @@
+name: Redesign meals as accordion
+on:
+  push:
+    paths:
+      - '.github/workflows/meal-accordion-redesign.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch index.html
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+
+          css="""
+/* Meal accordion: one meal open at a time for easier iPhone operation */
+.meal{overflow:hidden;padding:0;margin-top:12px}
+.mealhead{margin:0;padding:15px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;background:#fff;touch-action:manipulation}
+.mealhead h2{font-size:18px;margin:0}
+.mealheadRight{display:flex;align-items:center;gap:8px;min-width:0}
+.mealmini{display:flex;gap:4px;align-items:center}
+.mealmini span{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:900;color:#61584f;border:1px solid rgba(0,0,0,.06)}
+.mealmini .off{background:#f3eee9;color:#9a8b80}
+.mealchev{width:34px;height:34px;border:0;border-radius:50%;background:#fff4e8;color:#7b4a24;font-size:18px;font-weight:900;display:grid;place-items:center;flex:0 0 34px;transition:transform .18s ease}
+.meal.open .mealchev{transform:rotate(180deg)}
+.meal:not(.open)>:not(.mealhead){display:none!important}
+.meal.open>.photo,.meal.open>.preview,.meal.open>.groups,.meal.open>.sub3,.meal.open>.point4{margin-left:14px;margin-right:14px;width:calc(100% - 28px)}
+.meal.open>.photo{margin-top:0}
+.meal.open>.point4{margin-bottom:14px}
+.meal.open>.sub3{margin-bottom:0}
+.meal.open>.groups{overflow:visible}
+@media (max-width:390px){.mealmini span{width:22px;height:22px;font-size:10px}.mealhead{padding:14px 12px}.mealheadRight{gap:6px}}
+"""
+          if '/* Meal accordion:' not in s:
+              s=s.replace('</style>',css+'</style>',1)
+
+          if "let openMeal='breakfast';" not in s:
+              s=s.replace("const mealDefs=[['breakfast','朝食'],['lunch','昼食'],['dinner','夕食'],['snack','間食']];", "const mealDefs=[['breakfast','朝食'],['lunch','昼食'],['dinner','夕食'],['snack','間食']];\nlet openMeal='breakfast';",1)
+
+          needle="const input=el.querySelector('input');input.onchange=e=>{"
+          addon="""
+const mh=el.querySelector('.mealhead');
+const mealMini=[1,2,3,4].map(g=>{const on=g<4?(Number(m.groupCounts?.[g])||0)>0:m.groups.includes(4);return `<span class=\"${on?'g'+g:'off'}\">${g}</span>`}).join('');
+mh.innerHTML=`<h2>${label}</h2><div class=\"mealheadRight\"><div class=\"mealmini\">${mealMini}</div><button type=\"button\" class=\"mealchev\" aria-label=\"${label}を開閉\">⌄</button></div>`;
+el.classList.toggle('open',openMeal===id);
+mh.onclick=()=>{openMeal=openMeal===id?'':id;render();requestAnimationFrame(()=>{if(openMeal===id)el.scrollIntoView({behavior:'smooth',block:'nearest'})})};
+"""
+          if 'const mealMini=[1,2,3,4].map' not in s:
+              s=s.replace(needle,addon+needle,1)
+
+          p.write_text(s)
+          PY
+      - name: Commit changes
+        run: |
+          if git diff --quiet; then exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "Redesign meals as one-at-a-time accordion"
+          git push
