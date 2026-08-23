@@ -1,0 +1,40 @@
+name: Enlarge counter buttons
+on:
+  push:
+    paths:
+      - '.github/workflows/enlarge-counter-buttons.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch counter button sizes
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+          old='.groupcounter button,.holdcounter button{flex:0 0 24px;width:24px;height:24px;padding:0;border:0;border-radius:50%;background:rgba(255,255,255,.82);font-size:16px;font-weight:800;line-height:24px}'
+          new='.groupcounter button,.holdcounter button{flex:0 0 34px;width:34px;height:34px;padding:0;border:0;border-radius:50%;background:rgba(255,255,255,.92);font-size:20px;font-weight:900;line-height:34px;box-shadow:0 1px 4px rgba(0,0,0,.08)}'
+          if old in s:
+              s=s.replace(old,new,1)
+          old2='.groupcounter,.holdcounter{display:flex;align-items:center;justify-content:center;gap:4px;margin-top:7px;min-width:0}'
+          new2='.groupcounter,.holdcounter{display:flex;align-items:center;justify-content:center;gap:7px;margin-top:8px;min-width:0}'
+          if old2 in s:
+              s=s.replace(old2,new2,1)
+          old3='.groupcounter b,.holdcounter b{min-width:16px;text-align:center;font-size:13px}'
+          new3='.groupcounter b,.holdcounter b{min-width:20px;text-align:center;font-size:15px}'
+          if old3 in s:
+              s=s.replace(old3,new3,1)
+          p.write_text(s)
+          PY
+      - name: Commit changes
+        run: |
+          if git diff --quiet; then exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "Enlarge meal counter buttons"
+          git push
