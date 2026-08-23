@@ -34,7 +34,6 @@ const progress=document.getElementById('progressView');
 const measureSec=document.querySelector('.measure')?.closest('.section');
 const healthSec=document.querySelector('.healthcheck')?.closest('.section');
 
-// 体調専用ページを作り、体調カードを移動
 let healthView=document.getElementById('healthView');
 if(!healthView){
   healthView=document.createElement('main');healthView.id='healthView';healthView.className='view';
@@ -43,20 +42,17 @@ if(!healthView){
 }
 if(healthSec)healthView.appendChild(healthSec);
 
-// 体重・腹囲は進捗ページへ移動
 if(measureSec){
   const card=measureSec.querySelector('.measure');
   if(card){card.querySelector('h2').textContent='体重・腹囲の記録';}
   progress.querySelector('.section')?.prepend(measureSec);
 }
 
-// 下部ナビを5タブ化
 const nav=document.querySelector('.footnav>div');
 if(nav){
   nav.innerHTML=`<button data-view="todayView" class="active">ダイアリー</button><button data-view="healthView">体調</button><button data-view="calendarView">カレンダー</button><button data-view="progressView">進捗</button><button data-view="settingsView">設定</button>`;
 }
 
-// 既存switchViewを拡張して体調ページを描画
 const originalSwitchView=switchView;
 switchView=function(id){
   originalSwitchView(id);
@@ -66,8 +62,6 @@ switchView=function(id){
   }
 };
 document.querySelectorAll('.footnav button').forEach(b=>b.onclick=()=>switchView(b.dataset.view));
-
-// ダイアリーは食事＋3群サポート＋まとめに集中
 render();'''
           s=s.replace(marker,code,1)
           p.write_text(s)
@@ -79,3 +73,4 @@ render();'''
           git add index.html
           git diff --cached --quiet || git commit -m "Separate diary health and progress views"
           git push
+# trigger
