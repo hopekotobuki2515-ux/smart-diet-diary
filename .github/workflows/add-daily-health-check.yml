@@ -1,0 +1,63 @@
+name: Add daily health check
+on:
+  push:
+    paths:
+      - '.github/workflows/add-daily-health-check.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Patch index.html
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+
+          css=""".healthcheck{padding:14px;margin-top:12px}.healthcheck h2{font-size:18px;margin:0 0 5px}.healthrow{padding:11px 0;border-top:1px solid #eee7df}.healthrow:first-of-type{border-top:0}.healthlabel{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:13px;font-weight:800}.healthvalue{font-size:16px;color:#5b4a3d}.healthbuttons{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}.healthbuttons button{border:1px solid #e3d8ce;background:#fffaf6;color:#684e3b;border-radius:999px;padding:8px 11px;font-size:12px;font-weight:800}.healthbuttons button.on{border-color:var(--orange);background:#fff0e5;color:#a94c0a}.healthnote{font-size:11px;color:var(--muted);margin-top:7px}"""
+          if '.healthcheck{' not in s:
+              s=s.replace('.meal{padding:14px;margin-top:12px}',css+'.meal{padding:14px;margin-top:12px}')
+
+          block="""<section class=\"section\"><div class=\"card healthcheck\"><h2>水分・お通じ・体調</h2><div class=\"healthnote\">分かる範囲で、その日の状態を簡単に記録できます。</div><div class=\"healthrow\"><div class=\"healthlabel\"><span>水分摂取量</span><strong class=\"healthvalue\" id=\"waterTotal\">0mL</strong></div><div class=\"healthbuttons\"><button type=\"button\" data-water=\"-250\">−250mL</button><button type=\"button\" data-water=\"250\">＋250mL</button><button type=\"button\" data-water=\"500\">＋500mL</button></div></div><div class=\"healthrow\"><div class=\"healthlabel\"><span>お通じ</span></div><div class=\"healthbuttons\" id=\"bowelButtons\"><button type=\"button\" data-bowel=\"none\">なし</button><button type=\"button\" data-bowel=\"once\">1回</button><button type=\"button\" data-bowel=\"twoplus\">2回以上</button></div></div><div class=\"healthrow\"><div class=\"healthlabel\"><span>体調</span></div><div class=\"healthbuttons\" id=\"conditionButtons\"><button type=\"button\" data-condition=\"good\">良い</button><button type=\"button\" data-condition=\"normal\">ふつう</button><button type=\"button\" data-condition=\"poor\">いまいち</button></div></div></div></section>"""
+          anchor='<section class="section" id="meals"></section>'
+          if 'id="waterTotal"' not in s:
+              s=s.replace(anchor,block+'\n'+anchor)
+
+          old="function blankDay(){return{...Object.fromEntries(mealDefs.map(([id])=>[id,blankMeal()])),weight:'',waist:'',memo:'',g3:{green:0,light:0,mush:0}}}"
+          new="function blankDay(){return{...Object.fromEntries(mealDefs.map(([id])=>[id,blankMeal()])),weight:'',waist:'',memo:'',water:0,bowel:'',condition:'',g3:{green:0,light:0,mush:0}}}"
+          if old in s:
+              s=s.replace(old,new)
+
+          old2="base.weight=raw.weight??'';base.waist=raw.waist??'';base.memo=raw.memo??'';base.g3={green:Math.max(0,Number(raw.g3?.green)||0),light:Math.max(0,Number(raw.g3?.light)||0),mush:Math.max(0,Number(raw.g3?.mush)||0)};return base}"
+          new2="base.weight=raw.weight??'';base.waist=raw.waist??'';base.memo=raw.memo??'';base.water=Math.max(0,Number(raw.water)||0);base.bowel=raw.bowel||'';base.condition=raw.condition||'';base.g3={green:Math.max(0,Number(raw.g3?.green)||0),light:Math.max(0,Number(raw.g3?.light)||0),mush:Math.max(0,Number(raw.g3?.mush)||0)};return base}"
+          if old2 in s:
+              s=s.replace(old2,new2)
+
+          healthfn="""function renderHealth(d){document.getElementById('waterTotal').textContent=`${Number(d.water)||0}mL`;document.querySelectorAll('[data-bowel]').forEach(b=>b.classList.toggle('on',b.dataset.bowel===d.bowel));document.querySelectorAll('[data-condition]').forEach(b=>b.classList.toggle('on',b.dataset.condition===d.condition))}\n"""
+          if 'function renderHealth(' not in s:
+              s=s.replace('function render(){',healthfn+'function render(){')
+
+          target='renderG3Support(d);const s=renderBalance(document.getElementById(\'balance\'),d);'
+          if target in s and 'renderHealth(d);renderG3Support(d);' not in s:
+              s=s.replace(target,"renderHealth(d);renderG3Support(d);const s=renderBalance(document.getElementById('balance'),d);")
+
+          listeners="""document.addEventListener('click',e=>{const wb=e.target.closest('[data-water]');if(wb){const d=dayData();d.water=Math.max(0,(Number(d.water)||0)+(Number(wb.dataset.water)||0));localStorage.setItem('sdd-'+keyDate(current),JSON.stringify(d));renderHealth(d);return}const bb=e.target.closest('[data-bowel]');if(bb){const d=dayData();d.bowel=d.bowel===bb.dataset.bowel?'':bb.dataset.bowel;localStorage.setItem('sdd-'+keyDate(current),JSON.stringify(d));renderHealth(d);return}const cb=e.target.closest('[data-condition]');if(cb){const d=dayData();d.condition=d.condition===cb.dataset.condition?'':cb.dataset.condition;localStorage.setItem('sdd-'+keyDate(current),JSON.stringify(d));renderHealth(d)}});\n"""
+          marker="document.addEventListener('click',e=>{const b=e.target.closest('[data-g3]');"
+          if 'data-water' in s and "const wb=e.target.closest('[data-water]')" not in s:
+              s=s.replace(marker,listeners+marker)
+
+          p.write_text(s)
+          PY
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git diff --cached --quiet && exit 0
+          git commit -m "Add water bowel and condition tracking"
+          git push
