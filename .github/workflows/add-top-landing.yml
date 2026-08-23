@@ -1,0 +1,42 @@
+name: Add top landing page
+on:
+  push:
+    paths:
+      - '.github/workflows/add-top-landing.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch index.html
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+
+          css='''.landingPage{position:fixed;inset:0;z-index:100;background:linear-gradient(180deg,#fff7ef 0%,#fffaf5 45%,#fff 100%);overflow-y:auto;-webkit-overflow-scrolling:touch}.landingInner{width:min(520px,100%);margin:0 auto;padding:0 18px calc(28px + env(safe-area-inset-bottom))}.landingHero{margin:0 -18px;padding:34px 22px 30px;background:linear-gradient(135deg,var(--orange),var(--orange2));color:#fff}.landingHero .eyebrow{display:inline-block;padding:5px 9px;border:1px solid rgba(255,255,255,.55);border-radius:999px;font-size:11px;font-weight:800;margin-bottom:12px}.landingHero h1{font-size:30px;line-height:1.18;margin:0 0 10px;letter-spacing:.01em}.landingHero p{font-size:14px;line-height:1.7;margin:0;opacity:.97}.landingCard{background:#fff;border:1px solid var(--line);border-radius:20px;padding:18px;margin-top:16px;box-shadow:0 5px 18px rgba(70,45,20,.06)}.landingCard h2{font-size:20px;margin:0 0 8px}.landingCard>p{font-size:13px;line-height:1.75;color:#5d5148;margin:0}.landingGroups{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:14px}.landingGroup{border-radius:14px;padding:13px 12px;min-height:102px}.landingGroup b{display:block;font-size:17px;margin-bottom:5px}.landingGroup span{font-size:12px;line-height:1.5;color:#4f4945}.landingPoint{margin-top:13px;padding:11px 12px;background:#fff7ee;border-radius:12px;color:#7b4a24;font-size:13px;font-weight:800;text-align:center}.landingHow{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:13px}.landingStep{background:#fffaf6;border:1px solid #eee2d7;border-radius:13px;padding:11px 7px;text-align:center}.landingStep b{display:block;font-size:18px;color:var(--orange);margin-bottom:5px}.landingStep span{font-size:11px;line-height:1.45;color:#5f554e}.landingStart{position:sticky;bottom:0;margin:18px -18px 0;padding:12px 18px calc(12px + env(safe-area-inset-bottom));background:rgba(255,250,245,.94);backdrop-filter:blur(10px);border-top:1px solid #f0e5da}.landingStart button{width:100%;border:0;border-radius:15px;padding:15px;background:var(--orange);color:#fff;font-size:16px;font-weight:900;box-shadow:0 5px 14px rgba(244,122,42,.22)}.landingNote{font-size:10px;color:#8a7b70;text-align:center;margin-top:8px}.landingPage.hidden{display:none}'''
+          if '.landingPage{' not in s:
+              s=s.replace('</style>',css+'</style>',1)
+
+          landing='''<section class="landingPage" id="landingPage"><div class="landingInner"><div class="landingHero"><span class="eyebrow">SMART Diet ダイアリー</span><h1>写真から始める、<br>食べ方の見直し。</h1><p>毎日の食事を写真で残し、四群点数法を使って食事のバランスに気づくためのダイアリーです。</p></div><div class="landingCard"><h2>四群点数法とは？</h2><p>食品を栄養の特徴ごとに4つの群に分け、<strong>1点＝80kcal</strong>を目安に食事のバランスを確認する方法です。「どれだけ食べたか」だけでなく、<strong>どの群から食べたか</strong>を見ることで、食べ方の偏りに気づきやすくなります。</p><div class="landingGroups"><div class="landingGroup g1"><b>1群</b><span>乳・乳製品・卵など</span></div><div class="landingGroup g2"><b>2群</b><span>魚・肉・豆・豆製品など</span></div><div class="landingGroup g3"><b>3群</b><span>野菜・きのこ・海藻・いも・果物など</span></div><div class="landingGroup g4"><b>4群</b><span>ご飯・パン・麺・油・砂糖など</span></div></div><div class="landingPoint">同じ80kcalでも、食品の役割は違います。</div></div><div class="landingCard"><h2>使い方はかんたん</h2><div class="landingHow"><div class="landingStep"><b>1</b><span>食事を<br>写真で記録</span></div><div class="landingStep"><b>2</b><span>1〜4群を<br>チェック</span></div><div class="landingStep"><b>3</b><span>1日の<br>バランス確認</span></div></div><p style="margin-top:13px">詳しい食品の見方は、アプリ内の<strong>「四群の見方」</strong>からいつでも確認できます。</p></div><div class="landingStart"><button type="button" id="enterDiary">SMART Diet ダイアリーをはじめる</button><div class="landingNote">まずは今日の食事を1枚残すところから。</div></div></div></section>'''
+          if 'id="landingPage"' not in s:
+              s=s.replace('<body>','<body>\n'+landing,1)
+
+          hook="document.querySelectorAll('.footnav button').forEach(b=>b.onclick=()=>switchView(b.dataset.view));"
+          js="""const landingPage=document.getElementById('landingPage');const enterDiary=document.getElementById('enterDiary');if(enterDiary)enterDiary.onclick=()=>{landingPage?.classList.add('hidden');resetScrollTop();};\n"""
+          if 'const landingPage=document.getElementById' not in s:
+              s=s.replace(hook,hook+js,1)
+
+          p.write_text(s)
+          PY
+      - name: Commit changes
+        run: |
+          if git diff --quiet; then exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "Add top landing page with four-group intro"
+          git push
