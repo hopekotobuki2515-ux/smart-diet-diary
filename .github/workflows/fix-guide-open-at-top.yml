@@ -1,0 +1,35 @@
+name: Fix guide open at top
+
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-guide-open-at-top.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch index.html
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+          old="function switchView(id){document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id===id));document.querySelectorAll('.footnav button').forEach(b=>b.classList.toggle('active',b.dataset.view===id));if(id==='todayView')render();if(id==='calendarView')renderCalendar();if(id==='progressView')renderProgress();if(id==='settingsView')loadSettings();window.scrollTo({top:0,behavior:'auto'})}\ndocument.getElementById('openGuide').onclick=()=>switchView('guideView');document.getElementById('closeGuide').onclick=()=>switchView('todayView');"
+          new="function resetScrollTop(){document.documentElement.scrollTop=0;document.body.scrollTop=0;window.scrollTo(0,0)}\nfunction switchView(id){resetScrollTop();document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id===id));document.querySelectorAll('.footnav button').forEach(b=>b.classList.toggle('active',b.dataset.view===id));if(id==='todayView')render();if(id==='calendarView')renderCalendar();if(id==='progressView')renderProgress();if(id==='settingsView')loadSettings();resetScrollTop();requestAnimationFrame(()=>{resetScrollTop();requestAnimationFrame(resetScrollTop)})}\ndocument.getElementById('openGuide').onclick=()=>{resetScrollTop();switchView('guideView')};document.getElementById('closeGuide').onclick=()=>{resetScrollTop();switchView('todayView')};"
+          if old not in s:
+              raise SystemExit('target not found')
+          p.write_text(s.replace(old,new,1))
+          PY
+      - name: Commit changes
+        run: |
+          if git diff --quiet; then echo 'No changes'; exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git commit -m 'Open guide from top immediately'
+          git push
