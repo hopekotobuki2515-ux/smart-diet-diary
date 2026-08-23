@@ -5,7 +5,7 @@
     .photoStrip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:10px 0 6px}
     .photoThumb{position:relative;aspect-ratio:1/1;border-radius:12px;overflow:hidden;border:1px solid #eadfd5;background:#f8f3ef}
     .photoThumb img{width:100%;height:100%;object-fit:cover;display:block}
-    .photoDelete{position:absolute;right:5px;top:5px;width:34px;height:34px;border:0;border-radius:50%;background:rgba(32,32,32,.72);color:#fff;font-size:19px;font-weight:900;display:grid;place-items:center;box-shadow:0 2px 6px rgba(0,0,0,.18);touch-action:manipulation}
+    .photoDelete{position:absolute;right:5px;top:5px;width:44px;height:44px;border:0;border-radius:50%;background:rgba(32,32,32,.72);color:#fff;font-size:24px;font-weight:900;display:grid;place-items:center;box-shadow:0 2px 6px rgba(0,0,0,.18);touch-action:manipulation;z-index:3}
     .photoCount{font-size:10px;color:#8b6f59;margin-top:3px;text-align:right}
     .photoMini.isFull{opacity:.55;pointer-events:none}
   `;
@@ -75,7 +75,7 @@
           ensureImgs(m);persist(d);render();
         };
       }
-      label.childNodes[0].textContent='📷 '+(m.imgs.length?'写真を追加':'写真を追加');
+      label.childNodes[0].textContent='📷 写真を追加';
       label.classList.toggle('isFull',m.imgs.length>=3);
       let count=label.parentElement?.querySelector('.photoCount');
       if(!count){count=document.createElement('div');count.className='photoCount';label.insertAdjacentElement('afterend',count)}
@@ -86,7 +86,12 @@
       e.preventDefault();e.stopPropagation();
       const i=Number(btn.dataset.photoDelete);
       ensureImgs(m);
-      if(i>=0&&i<m.imgs.length){m.imgs.splice(i,1);ensureImgs(m);persist(d);render();}
+      if(i>=0&&i<m.imgs.length){
+        m.imgs.splice(i,1);
+        m.img=m.imgs[0]||null;
+        persist(d);
+        render();
+      }
     });
   }
 
