@@ -4,13 +4,13 @@
     .breakGroup{grid-template-columns:120px 1fr!important}
     .breakToggle{display:none!important}
     .subHint{grid-column:2/3!important}
-    .breakItems{gap:10px!important;padding:10px 10px 12px!important;align-items:center!important}
-    .subItem{position:relative!important;min-width:82px!important;min-height:112px!important;padding:10px 8px 56px!important;text-align:center!important}
-    .subItem .name{display:block!important;width:100%!important;min-height:30px!important;text-align:center!important}
-    .subItem .num{display:flex!important;justify-content:center!important;align-items:center!important;gap:2px!important;min-height:30px!important;line-height:1!important;width:100%!important;text-align:center!important;font-variant-numeric:tabular-nums!important}
+    .breakItems{gap:10px!important;padding:10px 10px 12px!important;align-items:stretch!important}
+    .subItem{position:relative!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:flex-start!important;min-width:82px!important;min-height:136px!important;padding:10px 8px 62px!important;text-align:center!important;overflow:visible!important}
+    .subItem .name{display:flex!important;align-items:center!important;justify-content:center!important;width:100%!important;min-height:34px!important;text-align:center!important;line-height:1.25!important}
+    .subItem .num{position:static!important;display:flex!important;justify-content:center!important;align-items:baseline!important;gap:2px!important;width:100%!important;min-height:30px!important;height:auto!important;margin:6px 0 0!important;line-height:1!important;text-align:center!important;font-variant-numeric:tabular-nums!important}
     .breakGroup:not(.g4) .subItem .unit{display:none!important}
-    .breakGroup:not(.g4) .subItem .num{position:absolute!important;left:0!important;right:0!important;top:43px!important;margin:0!important;height:28px!important;display:grid!important;place-items:center!important;width:100%!important;text-align:center!important}
-    .subItem .minus{left:50%!important;bottom:7px!important;transform:translateX(-50%)!important;width:46px!important;height:46px!important;line-height:46px!important;font-size:25px!important;background:#fff!important;border:2px solid currentColor!important;box-shadow:0 2px 7px rgba(0,0,0,.08)!important;touch-action:manipulation!important}
+    .breakGroup:not(.g4) .subItem .num{display:flex!important;justify-content:center!important;align-items:center!important}
+    .subItem .minus{position:absolute!important;left:50%!important;bottom:8px!important;transform:translateX(-50%)!important;width:46px!important;height:46px!important;line-height:46px!important;font-size:25px!important;background:#fff!important;border:2px solid currentColor!important;box-shadow:0 2px 7px rgba(0,0,0,.08)!important;touch-action:manipulation!important;z-index:2!important}
     .breakGroup.g1 .subItem .minus{color:var(--c1)!important}
     .breakGroup.g2 .subItem .minus{color:var(--c2)!important}
     .breakGroup.g3 .subItem .minus{color:var(--c3)!important}
@@ -25,7 +25,7 @@
     #meals .g3box{display:none!important}
     @media (max-width:390px){
       .breakGroup{grid-template-columns:112px 1fr!important}
-      .subItem{min-width:78px!important}
+      .subItem{min-width:78px!important;min-height:138px!important;padding-bottom:64px!important}
       .subItem .minus{width:48px!important;height:48px!important;line-height:48px!important}
       .breakHead b{font-size:20px!important}
       .breakHead .icons{font-size:25px!important}
