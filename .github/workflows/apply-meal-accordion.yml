@@ -1,0 +1,48 @@
+name: Apply meal accordion
+on:
+  push:
+    paths:
+      - '.github/workflows/apply-meal-accordion.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch index.html
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+          css_old='.meal{padding:14px;margin-top:12px}.mealhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}.mealhead h2{font-size:17px;margin:0}'
+          css_new='.meal{padding:0;margin-top:12px;overflow:hidden}.mealhead{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:0;padding:16px;cursor:pointer;touch-action:manipulation}.mealhead h2{font-size:17px;margin:0}.mealheadRight{display:flex;align-items:center;gap:8px}.mealStatus{display:flex;gap:4px}.mealDot{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:10px;font-weight:900;background:#f1ece7;color:#9a8d82}.mealDot.on.g1{background:var(--g1);color:#2c2c2c}.mealDot.on.g2{background:var(--g2);color:#2c2c2c}.mealDot.on.g3{background:var(--g3);color:#2c2c2c}.mealDot.on.g4{background:var(--g4);color:#2c2c2c}.mealChevron{font-size:18px;color:#7b4a24;transition:transform .15s}.meal.open .mealChevron{transform:rotate(180deg)}.mealBody{display:none;padding:0 14px 14px}.meal.open .mealBody{display:block}'
+          if css_old not in s:
+              raise SystemExit('CSS anchor not found')
+          s=s.replace(css_old,css_new,1)
+          js_anchor="const mealDefs=[['breakfast','朝食'],['lunch','昼食'],['dinner','夕食'],['snack','間食']];"
+          if js_anchor not in s:
+              raise SystemExit('mealDefs anchor not found')
+          s=s.replace(js_anchor,js_anchor+"\nlet openMeal='breakfast';",1)
+          old="const m=d[id],el=document.createElement('div');el.className='card meal';el.innerHTML=`<div class=\"mealhead\"><h2>${label}</h2></div><img class=\"preview\""
+          new="const m=d[id],el=document.createElement('div');el.className='card meal '+(openMeal===id?'open':'');const dots=[1,2,3,4].map(g=>{const on=g<4?(Number(m.groupCounts?.[g])||0)>0:m.groups.includes(4);return `<span class=\"mealDot g${g} ${on?'on':''}\">${g}</span>`}).join('');el.innerHTML=`<div class=\"mealhead\" data-meal-toggle><h2>${label}</h2><div class=\"mealheadRight\"><div class=\"mealStatus\">${dots}</div><span class=\"mealChevron\">⌄</span></div></div><div class=\"mealBody\"><img class=\"preview\""
+          if old not in s:
+              raise SystemExit('render start anchor not found')
+          s=s.replace(old,new,1)
+          old_end="</div></details></div>`;\nconst input=el.querySelector('input');"
+          new_end="</div></details></div></div>`;\nel.querySelector('[data-meal-toggle]').onclick=()=>{openMeal=openMeal===id?'':id;render()};\nconst input=el.querySelector('input');"
+          if old_end not in s:
+              raise SystemExit('render end anchor not found')
+          s=s.replace(old_end,new_end,1)
+          p.write_text(s)
+          PY
+      - name: Commit changes
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add index.html
+          git diff --cached --quiet && exit 0
+          git commit -m "Convert meal cards to accordion"
+          git push
