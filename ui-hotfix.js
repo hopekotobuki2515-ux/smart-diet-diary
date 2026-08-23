@@ -4,12 +4,12 @@
     .breakGroup{grid-template-columns:120px 1fr!important}
     .breakToggle{display:none!important}
     .subHint{grid-column:2/3!important}
-    .breakItems{gap:10px!important;padding:10px 10px 12px!important}
-    .subItem{min-width:82px!important;padding:10px 8px 56px!important;text-align:center!important}
-    .subItem .name{display:block!important;width:100%!important;text-align:center!important}
-    .subItem .num{display:flex!important;justify-content:center!important;align-items:baseline!important;gap:2px!important;min-height:30px!important;line-height:1!important;width:100%!important;text-align:center!important}
+    .breakItems{gap:10px!important;padding:10px 10px 12px!important;align-items:center!important}
+    .subItem{position:relative!important;min-width:82px!important;min-height:112px!important;padding:10px 8px 56px!important;text-align:center!important}
+    .subItem .name{display:block!important;width:100%!important;min-height:30px!important;text-align:center!important}
+    .subItem .num{display:flex!important;justify-content:center!important;align-items:center!important;gap:2px!important;min-height:30px!important;line-height:1!important;width:100%!important;text-align:center!important;font-variant-numeric:tabular-nums!important}
     .breakGroup:not(.g4) .subItem .unit{display:none!important}
-    .breakGroup:not(.g4) .subItem .num{display:block!important;text-align:center!important;width:100%!important}
+    .breakGroup:not(.g4) .subItem .num{position:absolute!important;left:0!important;right:0!important;top:43px!important;margin:0!important;height:28px!important;display:grid!important;place-items:center!important;width:100%!important;text-align:center!important}
     .subItem .minus{left:50%!important;bottom:7px!important;transform:translateX(-50%)!important;width:46px!important;height:46px!important;line-height:46px!important;font-size:25px!important;background:#fff!important;border:2px solid currentColor!important;box-shadow:0 2px 7px rgba(0,0,0,.08)!important;touch-action:manipulation!important}
     .breakGroup.g1 .subItem .minus{color:var(--c1)!important}
     .breakGroup.g2 .subItem .minus{color:var(--c2)!important}
@@ -18,8 +18,10 @@
     .subItem .minus:active{transform:translateX(-50%) scale(.94)!important}
     .breakHead b{font-size:21px!important;line-height:1.05!important}
     .breakHead span{font-size:12px!important;margin-top:5px!important}
-    .breakHead .icons{font-size:26px!important;line-height:1.15!important;margin-top:7px!important;letter-spacing:2px!important}
-    .groupCard .emoji{font-size:24px!important;line-height:1.15!important;margin-top:4px!important}
+    .breakHead .icons{font-size:26px!important;line-height:1.15!important;margin-top:7px!important;letter-spacing:2px!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:6px!important}
+    .groupCard .emoji{font-size:24px!important;line-height:1.15!important;margin-top:4px!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:4px!important}
+    .foodOilIcon{display:inline-flex!important;align-items:center!important;justify-content:center!important;width:27px!important;height:27px!important;vertical-align:middle!important}
+    .foodOilIcon svg{display:block!important;width:100%!important;height:100%!important}
     @media (max-width:390px){
       .breakGroup{grid-template-columns:112px 1fr!important}
       .subItem{min-width:78px!important}
@@ -29,6 +31,15 @@
     }
   `;
   document.head.appendChild(style);
+
+  const oilSvg=`<span class="foodOilIcon" aria-label="食用油"><svg viewBox="0 0 40 40" role="img"><path d="M16 4h8v5l3 3v22a3 3 0 0 1-3 3H16a3 3 0 0 1-3-3V12l3-3V4z" fill="#f5c74d" stroke="#9a6b18" stroke-width="1.6"/><path d="M16 4h8" stroke="#6f7f8b" stroke-width="3" stroke-linecap="round"/><rect x="15.5" y="17" width="9" height="10" rx="2" fill="#fff7d4" stroke="#c99825" stroke-width="1"/><path d="M18 20c2-3 4-3 5 0-1 3-4 4-5 0z" fill="#f2a900"/></svg></span>`;
+
+  function syncIcons(){
+    try{
+      document.querySelectorAll('.breakGroup.g2 .breakHead .icons,.groupCard.g2 .emoji').forEach(el=>{el.innerHTML='🐟 🥩 🫘';});
+      document.querySelectorAll('.breakGroup.g4 .breakHead .icons,.groupCard.g4 .emoji').forEach(el=>{el.innerHTML=`🍚 ${oilSvg} 🥄`;});
+    }catch(e){console.error('icon sync',e)}
+  }
 
   function syncCompactG3(){
     try{
@@ -50,11 +61,13 @@
     }catch(e){console.error('g3 sync',e)}
   }
 
+  function syncUi(){syncCompactG3();syncIcons();}
+
   if(typeof window.render==='function'){
     const baseRender=window.render;
     window.render=function(){
       const result=baseRender.apply(this,arguments);
-      requestAnimationFrame(syncCompactG3);
+      requestAnimationFrame(syncUi);
       return result;
     };
   }
@@ -63,5 +76,5 @@
     if(e.target.closest('[data-g3],#resetG3')) setTimeout(syncCompactG3,0);
   },true);
 
-  syncCompactG3();
+  syncUi();
 })();
