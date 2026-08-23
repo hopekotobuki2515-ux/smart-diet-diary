@@ -5,19 +5,27 @@
     .breakToggle{display:none!important}
     .subHint{grid-column:2/3!important}
     .breakItems{gap:10px!important;padding:10px 10px 12px!important}
-    .subItem{min-width:82px!important;padding:10px 8px 56px!important}
-    .subItem .num{display:flex!important;justify-content:center!important;align-items:baseline!important;gap:2px!important;min-height:30px!important;line-height:1!important}
+    .subItem{min-width:82px!important;padding:10px 8px 56px!important;text-align:center!important}
+    .subItem .name{display:block!important;width:100%!important;text-align:center!important}
+    .subItem .num{display:flex!important;justify-content:center!important;align-items:baseline!important;gap:2px!important;min-height:30px!important;line-height:1!important;width:100%!important;text-align:center!important}
     .breakGroup:not(.g4) .subItem .unit{display:none!important}
+    .breakGroup:not(.g4) .subItem .num{display:block!important;text-align:center!important;width:100%!important}
     .subItem .minus{left:50%!important;bottom:7px!important;transform:translateX(-50%)!important;width:46px!important;height:46px!important;line-height:46px!important;font-size:25px!important;background:#fff!important;border:2px solid currentColor!important;box-shadow:0 2px 7px rgba(0,0,0,.08)!important;touch-action:manipulation!important}
     .breakGroup.g1 .subItem .minus{color:var(--c1)!important}
     .breakGroup.g2 .subItem .minus{color:var(--c2)!important}
     .breakGroup.g3 .subItem .minus{color:var(--c3)!important}
     .breakGroup.g4 .subItem .minus{color:var(--c4)!important}
     .subItem .minus:active{transform:translateX(-50%) scale(.94)!important}
+    .breakHead b{font-size:21px!important;line-height:1.05!important}
+    .breakHead span{font-size:12px!important;margin-top:5px!important}
+    .breakHead .icons{font-size:26px!important;line-height:1.15!important;margin-top:7px!important;letter-spacing:2px!important}
+    .groupCard .emoji{font-size:24px!important;line-height:1.15!important;margin-top:4px!important}
     @media (max-width:390px){
-      .breakGroup{grid-template-columns:108px 1fr!important}
+      .breakGroup{grid-template-columns:112px 1fr!important}
       .subItem{min-width:78px!important}
       .subItem .minus{width:48px!important;height:48px!important;line-height:48px!important}
+      .breakHead b{font-size:20px!important}
+      .breakHead .icons{font-size:25px!important}
     }
   `;
   document.head.appendChild(style);
