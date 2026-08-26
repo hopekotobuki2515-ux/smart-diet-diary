@@ -17,6 +17,10 @@ frame.addEventListener('load',()=>{
     const shell=doc.createElement('script');
     shell.src='app-shell.js?v=20260826u';
     shell.onload=()=>{
+      const enter=doc.createElement('script');
+      enter.src='enter-hotfix.js?v=20260826u';
+      doc.body.appendChild(enter);
+
       const fix=doc.createElement('script');
       fix.src='ui-hotfix.js?v=20260826u';
       fix.onload=()=>{
