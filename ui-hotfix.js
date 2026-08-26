@@ -1,104 +1,39 @@
 (()=>{
-  const style=document.createElement('style');
-  style.textContent=`
-    .heroRow{position:relative!important;display:block!important}
-    .heroRow>div{min-width:0!important}
-    .hero h1{padding-right:126px!important}
-    .hero p{padding-right:0!important;font-size:11.5px!important;line-height:1.35!important;white-space:nowrap!important}
-    .guideBtn{position:absolute!important;right:0!important;top:0!important}
-    .breakGroup{grid-template-columns:120px 1fr!important}
-    .breakToggle{display:none!important}
-    .subHint{grid-column:2/3!important}
-    .breakItems{gap:10px!important;padding:10px 10px 12px!important;align-items:stretch!important}
-    .subItem{position:relative!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:flex-start!important;min-width:82px!important;min-height:136px!important;padding:10px 8px 62px!important;text-align:center!important;overflow:visible!important}
-    .subItem .name{display:flex!important;align-items:center!important;justify-content:center!important;width:100%!important;min-height:34px!important;text-align:center!important;line-height:1.25!important}
-    .subItem .num{position:static!important;display:flex!important;justify-content:center!important;align-items:baseline!important;gap:2px!important;width:100%!important;min-height:30px!important;height:auto!important;margin:6px 0 0!important;line-height:1!important;text-align:center!important;font-variant-numeric:tabular-nums!important}
-    .breakGroup:not(.g4) .subItem .unit{display:none!important}
-    .breakGroup:not(.g4) .subItem .num{display:flex!important;justify-content:center!important;align-items:center!important}
-    .subItem .minus{position:absolute!important;left:50%!important;bottom:8px!important;transform:translateX(-50%)!important;width:46px!important;height:46px!important;line-height:46px!important;font-size:25px!important;background:#fff!important;border:2px solid currentColor!important;box-shadow:0 2px 7px rgba(0,0,0,.08)!important;touch-action:manipulation!important;z-index:2!important}
-    .breakGroup.g1 .subItem .minus{color:var(--c1)!important}
-    .breakGroup.g2 .subItem .minus{color:var(--c2)!important}
-    .breakGroup.g3 .subItem .minus{color:var(--c3)!important}
-    .breakGroup.g4 .subItem .minus{color:var(--c4)!important}
-    .subItem .minus:active{transform:translateX(-50%) scale(.94)!important}
-    .breakHead b{font-size:21px!important;line-height:1.05!important}
-    .breakHead span{font-size:12px!important;margin-top:5px!important}
-    .breakHead .icons{font-size:26px!important;line-height:1.15!important;margin-top:7px!important;letter-spacing:2px!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:6px!important}
-    .groupSummary{align-items:stretch!important}
-    .groupCard{display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:flex-start!important;min-height:178px!important;padding:10px 3px 10px!important}
-    .groupCard strong{min-height:22px!important;display:flex!important;align-items:center!important;justify-content:center!important}
-    .groupCard small{min-height:28px!important;display:flex!important;align-items:center!important;justify-content:center!important;margin:3px 0 5px!important;text-align:center!important}
-    .groupCard .emoji{font-size:24px!important;line-height:1.15!important;margin-top:2px!important;min-height:58px!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:4px!important;flex-wrap:wrap!important}
-    .groupCard b{margin-top:auto!important;min-height:24px!important;display:flex!important;align-items:flex-end!important;justify-content:center!important;white-space:nowrap!important}
-    .foodOilIcon{display:inline-flex!important;align-items:center!important;justify-content:center!important;width:27px!important;height:27px!important;vertical-align:middle!important}
-    .foodOilIcon svg{display:block!important;width:100%!important;height:100%!important}
-    #meals .g3box{display:none!important}
-    @media (max-width:390px){
-      .hero p{font-size:11px!important;letter-spacing:-.15px!important}
-      .breakGroup{grid-template-columns:112px 1fr!important}
-      .subItem{min-width:78px!important;min-height:138px!important;padding-bottom:64px!important}
-      .subItem .minus{width:48px!important;height:48px!important;line-height:48px!important}
-      .breakHead b{font-size:20px!important}
-      .breakHead .icons{font-size:25px!important}
-      .groupCard{min-height:174px!important}
-      .groupCard .emoji{min-height:56px!important;font-size:23px!important}
-    }
-  `;
-  document.head.appendChild(style);
-
-  const oilSvg=`<span class="foodOilIcon" aria-label="食用油"><svg viewBox="0 0 40 40" role="img"><path d="M16 4h8v5l3 3v22a3 3 0 0 1-3 3H16a3 3 0 0 1-3-3V12l3-3V4z" fill="#f5c74d" stroke="#9a6b18" stroke-width="1.6"/><path d="M16 4h8" stroke="#6f7f8b" stroke-width="3" stroke-linecap="round"/><rect x="15.5" y="17" width="9" height="10" rx="2" fill="#fff7d4" stroke="#c99825" stroke-width="1"/><path d="M18 20c2-3 4-3 5 0-1 3-4 4-5 0z" fill="#f2a900"/></svg></span>`;
-
-  function syncIcons(){
-    try{
-      document.querySelectorAll('.breakGroup.g2 .breakHead .icons,.groupCard.g2 .emoji').forEach(el=>{el.innerHTML='🐟 🥩 🫘';});
-      document.querySelectorAll('.breakGroup.g4 .breakHead .icons,.groupCard.g4 .emoji').forEach(el=>{el.innerHTML=`🍚 ${oilSvg} 🥄`;});
-    }catch(e){console.error('icon sync',e)}
-  }
-
-  function syncCompactG3(){
-    try{
-      if(typeof dayData!=='function') return;
-      const d=dayData();
-      const g=d.g3||{green:0,light:0,mush:0};
-      const green=Math.max(0,Number(g.green)||0);
-      const light=Math.max(0,Number(g.light)||0);
-      const mush=Math.max(0,Number(g.mush)||0);
-      const veg=green+light;
-      document.querySelectorAll('.g3box .g3m').forEach(card=>{
-        const label=(card.querySelector('small')?.textContent||'').trim();
-        const value=card.querySelector('b');
-        if(!value) return;
-        if(label.includes('野菜合計')) value.textContent=`${veg}g`;
-        else if(label.includes('緑黄色野菜')) value.textContent=`${green}g`;
-        else if(label.includes('きのこ')||label.includes('海藻')) value.textContent=`${mush}g`;
-      });
-    }catch(e){console.error('g3 sync',e)}
-  }
-
-  function reorderDiary(){
-    try{
-      const mealsSection=document.getElementById('meals')?.closest('.section');
-      const detailedG3=document.querySelector('#todayView .g3support')?.closest('.section');
-      if(mealsSection&&detailedG3&&mealsSection.nextElementSibling!==detailedG3){
-        mealsSection.insertAdjacentElement('afterend',detailedG3);
-      }
-    }catch(e){console.error('diary reorder',e)}
-  }
-
-  function syncUi(){syncCompactG3();syncIcons();reorderDiary();}
-
-  if(typeof window.render==='function'){
-    const baseRender=window.render;
-    window.render=function(){
-      const result=baseRender.apply(this,arguments);
-      requestAnimationFrame(syncUi);
-      return result;
-    };
-  }
-
-  document.addEventListener('click',e=>{
-    if(e.target.closest('[data-g3],#resetG3')) setTimeout(syncCompactG3,0);
-  },true);
-
-  syncUi();
+const style=document.createElement('style');style.textContent=`
+:root{--c1:#2f7ed8;--c2:#e94f74;--c3:#5aa33b;--c4:#f39a1f}
+.mealTabs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px 0 14px}.mealTab{border:1px solid #eadfd5;background:#fff;border-radius:14px;padding:10px 2px;font-size:13px;font-weight:900;color:#5d5148;min-height:50px;touch-action:manipulation}.mealTab.active{border:2px solid var(--orange);background:#fff4e8;color:#a94c0a}.mealTabStatus{display:none}
+.mealWorkspace{padding:14px;margin-top:8px}.mealTop{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}.mealTitle{font-size:22px;font-weight:900;margin:0}.photoMini{border:1.5px dashed #e8b786;background:#fffaf6;color:#d56b22;border-radius:12px;padding:9px 12px;font-size:12px;font-weight:900}.preview{max-height:210px;border-radius:13px;margin-bottom:9px}
+.groupSummary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin-top:10px}.groupCard{border:1px solid #e5ddd4;border-radius:12px;padding:9px 3px 8px;text-align:center;min-width:0}.groupCard strong{display:block;font-size:16px}.groupCard small{display:block;font-size:10px;font-weight:800;line-height:1.2;margin:3px 0 5px}.groupCard .emoji{display:block;font-size:19px;line-height:1.1}.groupCard b{display:block;font-size:15px;margin-top:7px}.groupCard.g1{background:#eff7ff}.groupCard.g2{background:#fff1f4}.groupCard.g3{background:#f1faed}.groupCard.g4{background:#fff8eb}.groupCard.g1 strong{color:var(--c1)}.groupCard.g2 strong{color:var(--c2)}.groupCard.g3 strong{color:var(--c3)}.groupCard.g4 strong{color:var(--c4)}
+.breakdownTitleRow{display:flex;justify-content:space-between;align-items:end;gap:8px;margin:16px 2px 6px}.breakdownTitle{font-size:14px;font-weight:900}.breakdownNote{font-size:9px;color:#777;text-align:right}.breakGroup{display:grid;grid-template-columns:120px 1fr 34px;border:1px solid #e7ded6;border-left-width:4px;border-radius:12px;background:#fff;margin-top:7px;overflow:hidden;min-height:82px}.breakGroup.g1{border-left-color:var(--c1)}.breakGroup.g2{border-left-color:var(--c2)}.breakGroup.g3{border-left-color:var(--c3)}.breakGroup.g4{border-left-color:var(--c4)}.breakHead{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:8px 5px;font-weight:900;background:#faf7f4}.breakHead b{font-size:17px}.breakHead span{font-size:10px;margin-top:2px}.breakHead .icons{font-size:18px;margin-top:4px}.breakItems{display:flex;gap:7px;align-items:center;overflow-x:auto;padding:9px 7px;-webkit-overflow-scrolling:touch}.subItem{position:relative;flex:0 0 auto;min-width:72px;border:1px solid #e6ddd5;border-radius:10px;background:#fff;padding:9px 7px 26px;text-align:center;touch-action:manipulation}.subItem .name{font-size:10px;font-weight:900;line-height:1.25;white-space:normal}.subItem .num{font-size:18px;font-weight:900;margin-top:4px}.subItem .unit{font-size:9px;color:#777}.subItem .minus{position:absolute;left:50%;bottom:3px;transform:translateX(-50%);border:0;border-radius:999px;width:24px;height:24px;background:#f4eee8;font-size:16px;font-weight:900;line-height:24px}.breakGroup.g1 .subItem{border-color:#cfe4fb}.breakGroup.g2 .subItem{border-color:#f6c7d1}.breakGroup.g3 .subItem{border-color:#cfe6c6}.breakGroup.g4 .subItem{border-color:#f5d7a5}.breakToggle{border:0;background:#fff;color:#6f6258;font-size:20px;display:flex;align-items:center;justify-content:center}.subHint{grid-column:2/4;font-size:9px;color:#777;padding:0 8px 7px}
+.g3box{margin-top:12px;border:1px solid #cfe3c7;background:#f5fbf2;border-radius:13px;padding:10px}.g3box h3{font-size:16px;color:#4c8735;margin:0 0 8px}.g3metrics2{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.g3m{background:#fff;border:1px solid #dcebd7;border-radius:10px;padding:8px 4px;text-align:center}.g3m small{display:block;font-size:9px;color:#64735d}.g3m b{display:block;font-size:16px;margin-top:2px}.g3note{font-size:9px;color:#6f7b69;margin-top:7px}
+.footnav>div{grid-template-columns:repeat(5,1fr)!important}.footnav button{font-size:10px!important;padding-left:1px!important;padding-right:1px!important}.healthHero{padding:16px;margin-bottom:12px;background:linear-gradient(135deg,#fff5e9,#fff);border:1px solid var(--line);border-radius:18px}.healthHero h2{font-size:19px;margin:0 0 7px}.healthHero p{font-size:13px;line-height:1.7;margin:0;color:#65574c}
+.guideWheelWrap{padding:14px}.guideWheel{position:relative;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;width:min(330px,90vw);aspect-ratio:1;margin:6px auto 14px;border-radius:50%;overflow:hidden;border:6px solid #fff;box-shadow:0 4px 18px rgba(70,45,20,.10)}.guideQuad{border:0;font-weight:900;font-size:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}.guideQuad small{font-size:11px}.guideQuad.g1{background:var(--g1)}.guideQuad.g2{background:var(--g2)}.guideQuad.g3{background:var(--g3)}.guideQuad.g4{background:var(--g4)}.guideImo{display:inline-block;transform:translateX(-4px);margin:0 2px;white-space:nowrap}.guideWheelCenter{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:112px;height:112px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;text-align:center;font-weight:900;box-shadow:0 3px 12px rgba(70,45,20,.10)}
+`;document.head.appendChild(style);
+window.__activeMealId=window.__activeMealId||'breakfast';
+const defs={1:[['milk','牛乳・乳製品'],['egg','卵']],2:[['fish','魚介類'],['meat','肉'],['beans','豆・豆製品']],3:[['veg','野菜'],['mush','きのこ・海藻類'],['potato','いも'],['fruit','果物']],4:[['staple','米・パン・めん'],['seasoning','砂糖・調味料'],['fat','油脂類'],['other','酒・その他']]};
+const icons={1:'🥛 🥚',2:'🐟 🥩 ◻️',3:'🥕 🍄 🍎',4:'🍚 🛢️ 🥄'};
+function ensureSub(m){if(!m.subCounts)m.subCounts={1:{},2:{},3:{},4:{}};[1,2,3,4].forEach(g=>{if(!m.subCounts[g])m.subCounts[g]={};defs[g].forEach(([k])=>{if(!Number.isFinite(Number(m.subCounts[g][k])))m.subCounts[g][k]=0})})}
+function total(m,g){ensureSub(m);return defs[g].reduce((s,[k])=>s+(Number(m.subCounts[g][k])||0),0)}
+function sync(m){ensureSub(m);m.groupCounts=m.groupCounts||{1:0,2:0,3:0};[1,2,3].forEach(g=>m.groupCounts[g]=total(m,g));m.p4=Math.round(total(m,4)*2)/2;m.groups=[1,2,3].filter(g=>m.groupCounts[g]>0);if(m.p4>0)m.groups.push(4)}
+function groupLabel(g){return g===1?'乳・卵':g===2?'魚・肉・豆':g===3?'野菜など':'主食・油など'}
+function g3Summary(d){const x=d.g3||{};const veg=Number(x.veg||x.total||0),green=Number(x.green||0),mush=Number(x.mush||0);return `<div class="g3box"><h3>3群サポート　ⓘ</h3><div class="g3metrics2"><div class="g3m"><small>野菜合計</small><b>${veg||0}g</b></div><div class="g3m"><small>緑黄色野菜</small><b>${green||0}g</b></div><div class="g3m"><small>きのこ・海藻類</small><b>${mush||0}g</b></div></div><div class="g3note">野菜350g／緑黄色野菜120g以上／きのこ・海藻30〜40gを目安に。</div></div>`}
+render=function(){
+ document.getElementById('dateLabel').textContent=fmt(current);const d=dayData();const wrap=document.getElementById('meals');
+ const tabs=`<div class="mealTabs">${mealDefs.map(([id,label])=>`<button class="mealTab ${window.__activeMealId===id?'active':''}" data-mealtab="${id}">${label}</button>`).join('')}</div>`;
+ const [id,label]=mealDefs.find(x=>x[0]===window.__activeMealId)||mealDefs[0],m=d[id];ensureSub(m);sync(m);
+ const summary=`<div class="groupSummary">${[1,2,3,4].map(g=>`<div class="groupCard g${g}"><strong>${g}群</strong><small>${groupLabel(g)}</small><span class="emoji">${icons[g]}</span><b>合計 ${total(m,g)}${g===4?'点':''}</b></div>`).join('')}</div>`;
+ const rows=[1,2,3,4].map(g=>`<div class="breakGroup g${g}"><div class="breakHead"><b>${g}群</b><span>${groupLabel(g)}</span><div class="icons">${icons[g]}</div></div><div class="breakItems">${defs[g].map(([k,n])=>{const v=Number(m.subCounts[g][k])||0;return `<button class="subItem" data-subadd="${g}:${k}"><div class="name">${n}</div><div class="num">${v}<span class="unit">${g===4?'点':'回'}</span></div><span class="minus" data-subminus="${g}:${k}">−</span></button>`}).join('')}</div><button class="breakToggle" type="button">⌄</button>${g===4?'<div class="subHint">4群はタップで0.5点ずつ加算します。</div>':''}</div>`).join('');
+ wrap.innerHTML=tabs+`<div class="card mealWorkspace"><div class="mealTop"><h2 class="mealTitle">${label}</h2><label class="photoMini">📷 ${m.img?'写真を変更':'写真を追加'}<input type="file" accept="image/*" capture="environment" hidden></label></div>${m.img?`<img class="preview" src="${m.img}" style="display:block">`:''}${summary}<div class="breakdownTitleRow"><div class="breakdownTitle">内訳を記録（追加方式）</div><div class="breakdownNote">※項目は追加式で、数に制限なく記録できます</div></div>${rows}${g3Summary(d)}</div>`;
+ wrap.querySelectorAll('[data-mealtab]').forEach(b=>b.onclick=()=>{window.__activeMealId=b.dataset.mealtab;render()});
+ const input=wrap.querySelector('input[type=file]');if(input)input.onchange=e=>{const f=e.target.files[0];if(f)compress(f,x=>{m.img=x;render()})};
+ wrap.querySelectorAll('[data-subadd]').forEach(b=>b.onclick=e=>{if(e.target.closest('[data-subminus]'))return;const [g,k]=b.dataset.subadd.split(':');m.subCounts[g][k]=(Number(m.subCounts[g][k])||0)+(Number(g)===4?0.5:1);sync(m);render()});
+ wrap.querySelectorAll('[data-subminus]').forEach(b=>b.onclick=e=>{e.preventDefault();e.stopPropagation();const [g,k]=b.dataset.subminus.split(':');const step=Number(g)===4?0.5:1;m.subCounts[g][k]=Math.max(0,(Number(m.subCounts[g][k])||0)-step);sync(m);render()});
+ renderG3Support(d);const sum=renderBalance(document.getElementById('balance'),d);const a=document.getElementById('advice');a.textContent=sum.txt;a.className='advice '+sum.cls;
+};
+const guide=document.getElementById('guideView');guide.innerHTML=`<section class="section"><div class="card guideWheelWrap"><h2 style="margin:0 0 6px">四群点数法の見方</h2><p class="subtle">食べた食品を、4つの群とその内訳で確認します。</p><div class="guideWheel"><div class="guideQuad g1">第1群<small>牛乳・乳製品／卵</small></div><div class="guideQuad g2">第2群<small>魚介／肉／豆</small></div><div class="guideQuad g3">第3群<small>野菜／きのこ・海藻類／<span class="guideImo">いも</span>／<span class="guideFruit">果物</span></small></div><div class="guideQuad g4">第4群<small>主食／調味料／油脂／その他</small></div><div class="guideWheelCenter">1点＝80kcal</div></div></div><button type="button" class="backGuide" id="closeGuide">ダイアリーに戻る</button></section>`;
+const progress=document.getElementById('progressView'),measureSec=document.querySelector('.measure')?.closest('.section'),healthSec=document.querySelector('.healthcheck')?.closest('.section');let healthView=document.getElementById('healthView');if(!healthView){healthView=document.createElement('main');healthView.id='healthView';healthView.className='view';const now=new Date(),currentMinutes=now.getHours()*60+now.getMinutes(),morningStart=5*60,morningEnd=10*60,showMorningGreeting=currentMinutes>=morningStart&&currentMinutes<morningEnd;healthView.innerHTML=showMorningGreeting?`<section class="section"><div class="healthHero"><h2>おはようございます！！</h2><p>今日の体調はいかがですか？<br>今日も楽しく健康生活を目指しましょう！！</p></div></section>`:'';document.querySelector('.app').appendChild(healthView)}if(healthSec)healthView.appendChild(healthSec);if(measureSec){const card=measureSec.querySelector('.measure');if(card)card.querySelector('h2').textContent='体重・腹囲の記録';progress.querySelector('.section')?.prepend(measureSec)}
+const nav=document.querySelector('.footnav>div');nav.innerHTML=`<button data-view="todayView" class="active">ダイアリー</button><button data-view="healthView">体調</button><button data-view="calendarView">カレンダー</button><button data-view="progressView">進捗</button><button data-view="guideView">ガイド</button>`;
+nav.querySelectorAll('button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.getElementById(b.dataset.view)?.classList.add('active');nav.querySelectorAll('button').forEach(x=>x.classList.toggle('active',x===b));if(b.dataset.view==='progressView')renderProgress();if(b.dataset.view==='calendarView')renderCalendar()});
+document.getElementById('closeGuide')?.addEventListener('click',()=>{document.querySelector('[data-view="todayView"]')?.click()});
+render();
 })();
