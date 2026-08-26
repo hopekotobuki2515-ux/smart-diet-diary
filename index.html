@@ -28,6 +28,10 @@ frame.addEventListener('load',()=>{
     const shell=doc.createElement('script');
     shell.src='app-shell.js?v=20260826v';
     shell.onload=()=>{
+      const greeting=doc.createElement('script');
+      greeting.src='morning-greeting.js?v=20260826a';
+      doc.body.appendChild(greeting);
+
       const enter=doc.createElement('script');
       enter.src='enter-hotfix.js?v=20260826u';
       doc.body.appendChild(enter);
