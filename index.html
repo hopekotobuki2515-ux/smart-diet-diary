@@ -15,6 +15,11 @@ frame.addEventListener('load',()=>{
   try{
     const doc=frame.contentDocument;
 
+    const landingLead=doc.querySelector('.landingHero p');
+    if(landingLead){
+      landingLead.innerHTML='毎日の食事を写真で残し、四群点数法を使って食事の<br>バランスに気づくためのダイアリーです。';
+    }
+
     const guideStyle=doc.createElement('link');
     guideStyle.rel='stylesheet';
     guideStyle.href='guide-wheel-fix.css?v=20260826d';
