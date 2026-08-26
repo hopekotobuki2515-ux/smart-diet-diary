@@ -14,6 +14,10 @@
     .guideQuad .guideGroupItems{display:block!important;font-size:11px!important;font-weight:800!important;line-height:1.45!important;white-space:normal!important;word-break:keep-all!important;overflow-wrap:normal!important}
     .guideQuad .guideGroupItems span{display:block!important;white-space:nowrap!important}
     .guideQuad.g3,.guideQuad.g4{padding-top:20px!important;padding-bottom:14px!important}
+    .guideQuad.g1 .guideGroupTitle,.guideQuad.g1 .guideGroupItems{transform:translate(4px,4px)!important}
+    .guideQuad.g2 .guideGroupTitle,.guideQuad.g2 .guideGroupItems{transform:translate(-4px,4px)!important}
+    .guideQuad.g3 .guideGroupTitle,.guideQuad.g3 .guideGroupItems{transform:translate(4px,-4px)!important}
+    .guideQuad.g4 .guideGroupTitle,.guideQuad.g4 .guideGroupItems{transform:translate(-4px,-4px)!important}
     @media(max-width:390px){
       .groupCard.g4 small{font-size:9px!important}
       .groupCard.g4 b{font-size:13.5px!important}
