@@ -75,12 +75,14 @@
 }
 
 .guideWheel .guideImo{
-  transform:translateX(4px);
+  transform:translateX(calc(4px + 1em));
+  vertical-align:baseline;
 }
 
 .guideWheel .guideFruit{
   display:inline-block;
-  transform:translateX(2px);
+  transform:translateX(calc(2px + 1em));
+  vertical-align:baseline;
 }
 
 @media (max-width:380px){
