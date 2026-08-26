@@ -14,7 +14,6 @@
     .guideQuad .guideGroupItems{display:block!important;font-size:11px!important;font-weight:800!important;line-height:1.45!important;white-space:normal!important;word-break:keep-all!important;overflow-wrap:normal!important}
     .guideQuad .guideGroupItems span{display:block!important;white-space:nowrap!important}
     .guideQuad.g3,.guideQuad.g4{padding-top:20px!important;padding-bottom:14px!important}
-    #enterDiary{pointer-events:auto!important;touch-action:manipulation!important;position:relative!important;z-index:110!important}
     @media(max-width:390px){
       .groupCard.g4 small{font-size:9px!important}
       .groupCard.g4 b{font-size:13.5px!important}
@@ -38,31 +37,13 @@
     groups.forEach(([sel,title,items])=>{
       const el=guide.querySelector(sel);
       if(!el) return;
-      el.innerHTML=`<span class="guideGroupTitle">${title}</span><span class="guideGroupItems">${items.map(x=>`<span>${x}</span>`).join('')}</span>`;
+      const desired=`<span class="guideGroupTitle">${title}</span><span class="guideGroupItems">${items.map(x=>`<span>${x}</span>`).join('')}</span>`;
+      if(el.innerHTML!==desired) el.innerHTML=desired;
     });
   }
 
-  function enterDiaryNow(){
-    try{
-      const landing=document.getElementById('landingPage');
-      if(landing) landing.classList.add('hidden');
-      if(typeof switchView==='function') switchView('todayView');
-      const today=document.getElementById('todayView');
-      if(today && !today.classList.contains('active')) today.classList.add('active');
-      if(typeof resetScrollTop==='function') resetScrollTop();
-      else window.scrollTo(0,0);
-    }catch(e){console.error('enter diary',e)}
-  }
-
-  const apply=()=>requestAnimationFrame(fixGuideLabels);
-  apply();
+  requestAnimationFrame(fixGuideLabels);
   document.addEventListener('click',e=>{
     if(e.target.closest('#openGuide,.guideBtn')) setTimeout(fixGuideLabels,0);
-    if(e.target.closest('#enterDiary')) enterDiaryNow();
   },true);
-  document.addEventListener('touchend',e=>{
-    if(e.target.closest('#enterDiary')) setTimeout(enterDiaryNow,0);
-  },{capture:true,passive:true});
-  const mo=new MutationObserver(()=>fixGuideLabels());
-  if(document.body) mo.observe(document.body,{childList:true,subtree:true});
 })();
