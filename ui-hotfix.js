@@ -1,6 +1,11 @@
 (()=>{
   const style=document.createElement('style');
   style.textContent=`
+    .heroRow{position:relative!important;display:block!important}
+    .heroRow>div{min-width:0!important}
+    .hero h1{padding-right:126px!important}
+    .hero p{padding-right:0!important;font-size:11.5px!important;line-height:1.35!important;white-space:nowrap!important}
+    .guideBtn{position:absolute!important;right:0!important;top:0!important}
     .breakGroup{grid-template-columns:120px 1fr!important}
     .breakToggle{display:none!important}
     .subHint{grid-column:2/3!important}
@@ -29,6 +34,7 @@
     .foodOilIcon svg{display:block!important;width:100%!important;height:100%!important}
     #meals .g3box{display:none!important}
     @media (max-width:390px){
+      .hero p{font-size:11px!important;letter-spacing:-.15px!important}
       .breakGroup{grid-template-columns:112px 1fr!important}
       .subItem{min-width:78px!important;min-height:138px!important;padding-bottom:64px!important}
       .subItem .minus{width:48px!important;height:48px!important;line-height:48px!important}
