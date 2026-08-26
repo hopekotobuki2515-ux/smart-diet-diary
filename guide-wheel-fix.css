@@ -54,6 +54,10 @@
   padding:12px;
 }
 
+.guideWheel .guideImo{
+  transform:translateX(2px);
+}
+
 @media (max-width:380px){
   .guideWheel .guideQuad{
     padding:16px;
