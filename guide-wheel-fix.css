@@ -75,6 +75,11 @@
 }
 
 .guideWheel .guideImo{
+  transform:translateX(4px);
+}
+
+.guideWheel .guideFruit{
+  display:inline-block;
   transform:translateX(2px);
 }
 
