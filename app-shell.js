@@ -16,7 +16,7 @@ function ensureSub(m){if(!m.subCounts)m.subCounts={1:{},2:{},3:{},4:{}};[1,2,3,4
 function total(m,g){ensureSub(m);return defs[g].reduce((s,[k])=>s+(Number(m.subCounts[g][k])||0),0)}
 function sync(m){ensureSub(m);m.groupCounts=m.groupCounts||{1:0,2:0,3:0};[1,2,3].forEach(g=>m.groupCounts[g]=total(m,g));m.p4=Math.round(total(m,4)*2)/2;m.groups=[1,2,3].filter(g=>m.groupCounts[g]>0);if(m.p4>0)m.groups.push(4)}
 function groupLabel(g){return g===1?'乳・卵':g===2?'魚・肉・豆':g===3?'野菜など':'主食・油など'}
-function g3Summary(d){const x=d.g3||{};const veg=Number(x.veg||x.total||0),green=Number(x.green||0),mush=Number(x.mush||0);return `<div class="g3box"><h3>3群サポート　ⓘ</h3><div class="g3metrics2"><div class="g3m"><small>野菜合計</small><b>${veg||0}g</b></div><div class="g3m"><small>緑黄色野菜</small><b>${green||0}g</b></div><div class="g3m"><small>きのこ・海藻</small><b>${mush||0}g</b></div></div><div class="g3note">野菜350g／緑黄色野菜120g以上／きのこ・海藻30〜40gを目安に。</div></div>`}
+function g3Summary(d){const x=d.g3||{};const veg=Number(x.veg||x.total||0),green=Number(x.green||0),mush=Number(x.mush||0);return `<div class="g3box"><h3>3群サポート　ⓘ</h3><div class="g3metrics2"><div class="g3m"><small>野菜合計</small><b>${veg||0}g</b></div><div class="g3m"><small>緑黄色野菜</small><b>${green||0}g</b></div><div class="g3m"><small>きのこ・海藻類</small><b>${mush||0}g</b></div></div><div class="g3note">野菜350g／緑黄色野菜120g以上／きのこ・海藻30〜40gを目安に。</div></div>`}
 render=function(){
  document.getElementById('dateLabel').textContent=fmt(current);const d=dayData();const wrap=document.getElementById('meals');
  const tabs=`<div class="mealTabs">${mealDefs.map(([id,label])=>`<button class="mealTab ${window.__activeMealId===id?'active':''}" data-mealtab="${id}">${label}</button>`).join('')}</div>`;
