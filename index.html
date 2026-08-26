@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#f47a2a">
 <title>SMART Diet ダイアリー</title>
-<style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#fffaf5}#appFrame{position:fixed;inset:0;width:100%;height:100dvh;border:0;background:#fffaf5}</style>
+<style>html,body{margin:0;width:100%;height:100%;height:100dvh;overflow:hidden;overscroll-behavior:none;touch-action:manipulation;background:#fffaf5}#appFrame{position:fixed;inset:0;width:100%;height:100dvh;border:0;background:#fffaf5}</style>
 </head>
 <body>
 <iframe id="appFrame" src="legacy.html?v=20260826v"></iframe>
@@ -14,6 +14,30 @@ const frame=document.getElementById('appFrame');
 frame.addEventListener('load',()=>{
   try{
     const doc=frame.contentDocument;
+
+    const viewportLockStyle=doc.createElement('style');
+    viewportLockStyle.textContent=`
+      html,body{
+        width:100%;
+        height:100%;
+        height:100dvh;
+        margin:0;
+        overflow:hidden;
+        overscroll-behavior:none;
+        touch-action:manipulation;
+      }
+      .app{
+        height:100%;
+        height:100dvh;
+        min-height:0;
+        overflow-y:auto;
+        overflow-x:hidden;
+        overscroll-behavior-y:none;
+        -webkit-overflow-scrolling:touch;
+        touch-action:pan-y;
+      }
+    `;
+    doc.head.appendChild(viewportLockStyle);
 
     const landingLead=doc.querySelector('.landingHero p');
     if(landingLead){
