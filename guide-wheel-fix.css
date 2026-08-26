@@ -42,6 +42,26 @@
   padding-left:clamp(28px,8vw,42px);
 }
 
+.guideWheel .guideQuad.g1{
+  padding-top:calc(clamp(18px,5vw,28px) + 2px);
+  padding-left:calc(clamp(18px,5vw,28px) + 2px);
+}
+
+.guideWheel .guideQuad.g2{
+  padding-top:calc(clamp(18px,5vw,28px) + 2px);
+  padding-right:calc(clamp(18px,5vw,28px) + 2px);
+}
+
+.guideWheel .guideQuad.g3{
+  padding-bottom:calc(clamp(18px,5vw,28px) + 2px);
+  padding-left:calc(clamp(18px,5vw,28px) + 2px);
+}
+
+.guideWheel .guideQuad.g4{
+  padding-bottom:calc(clamp(18px,5vw,28px) + 2px);
+  padding-right:calc(clamp(18px,5vw,28px) + 2px);
+}
+
 .guideWheel .guideWheelCenter{
   left:50%;
   top:50%;
@@ -72,4 +92,8 @@
   .guideWheel .guideQuad.g3{padding-right:30px}
   .guideWheel .guideQuad.g2,
   .guideWheel .guideQuad.g4{padding-left:30px}
+  .guideWheel .guideQuad.g1{padding-top:18px;padding-left:18px}
+  .guideWheel .guideQuad.g2{padding-top:18px;padding-right:18px}
+  .guideWheel .guideQuad.g3{padding-bottom:18px;padding-left:18px}
+  .guideWheel .guideQuad.g4{padding-bottom:18px;padding-right:18px}
 }
