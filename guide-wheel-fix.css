@@ -86,18 +86,30 @@
 }
 
 .guideWheel .guideQuad.g3 small{
+  position:relative;
   font-size:0;
   text-align:center;
 }
 
 .guideWheel .guideQuad.g3 small::before{
-  content:"野菜\Aきのこ・海藻類\Aいも・果物";
+  content:"野菜\Aきのこ・海藻類\Aいも　果物";
   display:block;
   white-space:pre;
   font-size:clamp(9px,2.7vw,11px);
   font-weight:700;
   line-height:1.35;
   text-align:center;
+}
+
+.guideWheel .guideQuad.g3 small::after{
+  content:"・";
+  position:absolute;
+  left:50%;
+  top:2.7em;
+  transform:translateX(-50%);
+  font-size:clamp(9px,2.7vw,11px);
+  font-weight:700;
+  line-height:1.35;
 }
 
 @media (max-width:380px){
