@@ -14,6 +14,12 @@ const frame=document.getElementById('appFrame');
 frame.addEventListener('load',()=>{
   try{
     const doc=frame.contentDocument;
+
+    const guideStyle=doc.createElement('link');
+    guideStyle.rel='stylesheet';
+    guideStyle.href='guide-wheel-fix.css?v=20260826a';
+    doc.head.appendChild(guideStyle);
+
     const shell=doc.createElement('script');
     shell.src='app-shell.js?v=20260826u';
     shell.onload=()=>{
