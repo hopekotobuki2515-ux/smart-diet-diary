@@ -43,23 +43,23 @@
 }
 
 .guideWheel .guideQuad.g1{
-  padding-top:calc(clamp(18px,5vw,28px) + 2px);
-  padding-left:calc(clamp(18px,5vw,28px) + 2px);
+  padding-top:calc(clamp(18px,5vw,28px) + 10px);
+  padding-left:calc(clamp(18px,5vw,28px) + 10px);
 }
 
 .guideWheel .guideQuad.g2{
-  padding-top:calc(clamp(18px,5vw,28px) + 2px);
-  padding-right:calc(clamp(18px,5vw,28px) + 2px);
+  padding-top:calc(clamp(18px,5vw,28px) + 10px);
+  padding-right:calc(clamp(18px,5vw,28px) + 10px);
 }
 
 .guideWheel .guideQuad.g3{
-  padding-bottom:calc(clamp(18px,5vw,28px) + 2px);
-  padding-left:calc(clamp(18px,5vw,28px) + 2px);
+  padding-bottom:calc(clamp(18px,5vw,28px) + 10px);
+  padding-left:calc(clamp(18px,5vw,28px) + 10px);
 }
 
 .guideWheel .guideQuad.g4{
-  padding-bottom:calc(clamp(18px,5vw,28px) + 2px);
-  padding-right:calc(clamp(18px,5vw,28px) + 2px);
+  padding-bottom:calc(clamp(18px,5vw,28px) + 10px);
+  padding-right:calc(clamp(18px,5vw,28px) + 10px);
 }
 
 .guideWheel .guideWheelCenter{
@@ -97,8 +97,8 @@
   .guideWheel .guideQuad.g3{padding-right:30px}
   .guideWheel .guideQuad.g2,
   .guideWheel .guideQuad.g4{padding-left:30px}
-  .guideWheel .guideQuad.g1{padding-top:18px;padding-left:18px}
-  .guideWheel .guideQuad.g2{padding-top:18px;padding-right:18px}
-  .guideWheel .guideQuad.g3{padding-bottom:18px;padding-left:18px}
-  .guideWheel .guideQuad.g4{padding-bottom:18px;padding-right:18px}
+  .guideWheel .guideQuad.g1{padding-top:26px;padding-left:26px}
+  .guideWheel .guideQuad.g2{padding-top:26px;padding-right:26px}
+  .guideWheel .guideQuad.g3{padding-bottom:26px;padding-left:26px}
+  .guideWheel .guideQuad.g4{padding-bottom:26px;padding-right:26px}
 }
