@@ -8,23 +8,23 @@
 <style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#fffaf5}#appFrame{position:fixed;inset:0;width:100%;height:100dvh;border:0;background:#fffaf5}</style>
 </head>
 <body>
-<iframe id="appFrame" src="legacy.html?v=20260826r"></iframe>
+<iframe id="appFrame" src="legacy.html?v=20260826s"></iframe>
 <script>
 const frame=document.getElementById('appFrame');
 frame.addEventListener('load',()=>{
   try{
     const doc=frame.contentDocument;
     const shell=doc.createElement('script');
-    shell.src='app-shell.js?v=20260826r';
+    shell.src='app-shell.js?v=20260826s';
     shell.onload=()=>{
       const fix=doc.createElement('script');
-      fix.src='ui-hotfix.js?v=20260826r';
+      fix.src='ui-hotfix.js?v=20260826s';
       fix.onload=()=>{
         const photo=doc.createElement('script');
-        photo.src='photo-hotfix.js?v=20260826r';
+        photo.src='photo-hotfix.js?v=20260826s';
         photo.onload=()=>{
           const fit=doc.createElement('script');
-          fit.src='fit-hotfix.js?v=20260826r';
+          fit.src='fit-hotfix.js?v=20260826s';
           doc.body.appendChild(fit);
         };
         doc.body.appendChild(photo);
