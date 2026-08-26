@@ -19,7 +19,7 @@
     .guideQuad.g3 .guideGroupTitle,.guideQuad.g3 .guideGroupItems{transform:translate(4px,-4px)!important}
     .guideQuad.g4 .guideGroupTitle,.guideQuad.g4 .guideGroupItems{transform:translate(-4px,-4px)!important}
 
-    .landingPage.hidden + .app .hero h1{white-space:nowrap!important;font-size:clamp(17px,5.2vw,21px)!important;letter-spacing:-.35px!important}
+    .app .hero h1{white-space:nowrap!important;font-size:clamp(17px,5.2vw,21px)!important;letter-spacing:-.35px!important}
 
     @media(max-width:390px){
       .groupCard.g4 small{font-size:9px!important}
