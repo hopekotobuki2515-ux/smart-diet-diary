@@ -8,7 +8,7 @@
 <style>html,body{margin:0;width:100%;height:100%;height:100dvh;overflow:hidden;overscroll-behavior:none;touch-action:manipulation;background:#fffaf5}#appFrame{position:fixed;inset:0;width:100%;height:100dvh;border:0;background:#fffaf5}</style>
 </head>
 <body>
-<iframe id="appFrame" src="legacy.html?v=20260826v"></iframe>
+<iframe id="appFrame" src="legacy.html?v=20260827w"></iframe>
 <script>
 const frame=document.getElementById('appFrame');
 frame.addEventListener('load',()=>{
@@ -50,7 +50,7 @@ frame.addEventListener('load',()=>{
     doc.head.appendChild(guideStyle);
 
     const shell=doc.createElement('script');
-    shell.src='app-shell.js?v=20260826v';
+    shell.src='app-shell.js?v=20260827w';
     shell.onload=()=>{
       const greeting=doc.createElement('script');
       greeting.src='morning-greeting.js?v=20260826a';
@@ -61,13 +61,18 @@ frame.addEventListener('load',()=>{
       doc.body.appendChild(enter);
 
       const fix=doc.createElement('script');
-      fix.src='ui-hotfix.js?v=20260826u';
+      fix.src='ui-hotfix.js?v=20260827w';
       fix.onload=()=>{
         const photo=doc.createElement('script');
         photo.src='photo-hotfix.js?v=20260826u';
         photo.onload=()=>{
           const fit=doc.createElement('script');
           fit.src='fit-hotfix.js?v=20260826y';
+          fit.onload=()=>{
+            const bottomNav=doc.createElement('script');
+            bottomNav.src='bottom-nav-hotfix.js?v=20260827w';
+            doc.body.appendChild(bottomNav);
+          };
           doc.body.appendChild(fit);
         };
         doc.body.appendChild(photo);
