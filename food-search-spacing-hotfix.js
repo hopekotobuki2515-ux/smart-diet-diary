@@ -7,6 +7,9 @@
       padding-bottom:0!important;
     }
     #foodSearchView .fsx-card{
+      margin-bottom:0!important;
+    }
+    #foodSearchView .fsx-session-summary{
       margin-bottom:calc(88px + env(safe-area-inset-bottom))!important;
     }
   `;
