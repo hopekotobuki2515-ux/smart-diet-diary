@@ -5,7 +5,7 @@
   const style=document.createElement('style');
   style.textContent=`
     #foodSearchView .fsx-wrap{
-      padding-bottom:0!important;
+      padding-bottom:calc(98px + env(safe-area-inset-bottom))!important;
     }
     #foodSearchView .fsx-card{
       margin-bottom:0!important;
@@ -14,7 +14,7 @@
       padding-bottom:0!important;
     }
     #foodSearchView .fsx-session-summary{
-      margin-bottom:calc(96px + env(safe-area-inset-bottom))!important;
+      margin-bottom:0!important;
     }
   `;
   document.head.appendChild(style);
