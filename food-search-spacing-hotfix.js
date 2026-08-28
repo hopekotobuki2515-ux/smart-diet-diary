@@ -4,7 +4,7 @@
   const style=document.createElement('style');
   style.textContent=`
     #foodSearchView .fsx-wrap{
-      padding-bottom:160px!important;
+      padding-bottom:calc(96px + env(safe-area-inset-bottom))!important;
     }
   `;
   document.head.appendChild(style);
