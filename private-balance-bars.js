@@ -22,7 +22,9 @@
     .pvd-saved{margin:12px 0;padding:10px 12px;border-radius:13px;background:#fff1e6;color:#a45117;font-size:12px;font-weight:900}
     .pvd-compare{display:grid;grid-template-columns:1fr 1fr;gap:9px}.pvd-panel{min-width:0;border:1px solid #eee2d7;background:#fff;border-radius:16px;padding:11px}.pvd-panel.guide{background:#fffaf3}
     .pvd-label{font-size:10px;font-weight:900;color:#776b62;margin-bottom:7px}.pvd-photo{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:12px;background:#f2ece7;display:block}.pvd-empty{aspect-ratio:4/3;border-radius:12px;background:#f4eee8;display:grid;place-items:center;text-align:center;padding:10px;font-size:10px;color:#8a7e75}
+    .pvd-guide-visual{aspect-ratio:4/3;border-radius:12px;background:#f4eee8;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative}.pvd-guide-visual img{max-width:100%;max-height:100%;object-fit:cover;border-radius:10px;transition:transform .2s}.pvd-guide-badge{position:absolute;right:6px;bottom:6px;padding:4px 6px;border-radius:999px;background:rgba(255,255,255,.92);font-size:9px;font-weight:900;color:#a95418}
     .pvd-mealname{margin-top:8px;font-size:12px;font-weight:900;color:#4d443e}.pvd-guide-main{font-size:12px;font-weight:900;color:#a95418;line-height:1.45}.pvd-guide-sub{margin-top:5px;font-size:10px;line-height:1.5;color:#7b7068}
+    .pvd-nutrients{margin-top:10px;border:1px solid #eee2d7;background:#fff;border-radius:16px;padding:12px}.pvd-nutrients h4{margin:0 0 7px;font-size:11px;color:#574c45}.pvd-nutrient{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-top:1px solid #f2ebe5;font-size:11px;color:#61564f}.pvd-nutrient:first-of-type{border-top:0}.pvd-nutrient b{color:#453d38}.pvd-nutrient span{text-align:right;font-weight:800;color:#77695f}.pvd-nutrient-note{margin-top:7px;font-size:9px;line-height:1.5;color:#91857c}
     .pvd-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:13px}.pvd-actions button{min-height:44px;border-radius:12px;padding:10px 8px;font-size:12px;font-weight:900}.pvd-stay{border:1px solid #eadfd5;background:#fff;color:#5f5147}.pvd-search{border:0;background:#f47a2a;color:#fff}
     @media(max-width:390px){.pvd-card{padding:14px}.pvd-compare{gap:7px}.pvd-panel{padding:9px}}
   `;
@@ -54,7 +56,7 @@
     return out;
   }
   function rowHtml(g,actual,target){
-    const max=Math.max(target*1.6,actual,0.1), targetPct=Math.min(100,target/max*100), normal=Math.min(actual,target), normalPct=Math.min(100,normal/max*100), over=Math.max(0,actual-target), overPct=Math.min(100-normalPct,over/max*100);
+    const max=Math.max(target*1.6,actual,0.1),targetPct=Math.min(100,target/max*100),normal=Math.min(actual,target),normalPct=Math.min(100,normal/max*100),over=Math.max(0,actual-target),overPct=Math.min(100-normalPct,over/max*100);
     return `<div class="fsd-balance-row"><div class="fsd-balance-label">第${g}群</div><div><div class="fsd-track"><div class="fsd-fill-normal fsd-g${g}" style="width:${normalPct}%"></div>${over>0?`<div class="fsd-fill-over" style="left:${normalPct}%;width:${overPct}%"></div>`:''}<div class="fsd-target-line" style="left:${targetPct}%"></div></div><div class="fsd-balance-meta"><strong>${fmt(actual)} / ${fmt(target)}点</strong><span>${over>0?`目安＋${fmt(over)}点`:'目安位置を確認'}</span></div></div></div>`;
   }
   function balanceHtml(scores,targets){
@@ -65,6 +67,22 @@
     if(mealNames[window.__activeMealId])return window.__activeMealId;
     return 'breakfast';
   }
+  function guideRatio(scores,targets){
+    let ratio=1;
+    [1,2,3,4].forEach(g=>{const a=Number(scores[g]||0),t=Number(targets[g]||0);if(a>0&&t>0)ratio=Math.min(ratio,t/a)});
+    return Math.max(.2,Math.min(1,ratio));
+  }
+  function nutrientHtml(m,targets){
+    const fat=Number(m?.subCounts?.[4]?.fat)||0;
+    const staple=Number(m?.subCounts?.[4]?.staple)||0;
+    const seasoning=Number(m?.subCounts?.[4]?.seasoning)||0;
+    const carb=staple+seasoning;
+    const total4=(Number(m?.p4)||0)+(Number(m?.hold4Count)||0)+sumObj(m?.subCounts?.[4]);
+    const fatText=fat>0?`${fmt(fat)}点`:(total4>0?'内訳未登録':'0.0点');
+    const carbText=carb>0?`${fmt(carb)}点`:(total4>0?'内訳未登録':'0.0点');
+    const totalState=total4>targets[4]?`第4群全体は目安＋${fmt(total4-targets[4])}点`:`第4群全体 ${fmt(total4)} / ${fmt(targets[4])}点`;
+    return `<section class="pvd-nutrients"><h4>油分・糖質の確認</h4><div class="pvd-nutrient"><b>油分（油脂）</b><span>${fatText}</span></div><div class="pvd-nutrient"><b>糖質（主食・糖類）</b><span>${carbText}</span></div><div class="pvd-nutrient"><b>第4群の状態</b><span>${totalState}</span></div><div class="pvd-nutrient-note">食品内訳が登録されている場合だけ油脂・主食系を分けて表示します。推測で数値は補いません。</div></section>`;
+  }
   function openNormalDiaryPrivateView(){
     const d=typeof dayData==='function'?dayData():null;
     if(!d)return;
@@ -73,7 +91,10 @@
     const back=document.createElement('div');back.className='pvd-backdrop';
     const photo=m.img?`<img class="pvd-photo" src="${m.img}" alt="登録した食事">`:`<div class="pvd-empty">${mealNames[mealId]}の写真または<br>食品データを確認できます</div>`;
     const total=Object.values(scores).reduce((a,v)=>a+Number(v||0),0);
-    back.innerHTML=`<div class="pvd-card" role="dialog" aria-modal="true" aria-label="食事の自己確認"><div class="pvd-head"><div><div class="pvd-kicker">PRIVATE VIEW</div><h3>食事の自己確認</h3></div><button class="pvd-close" aria-label="閉じる">×</button></div><div class="pvd-saved">登録しました（気づきを保存）</div><div class="pvd-compare"><section class="pvd-panel"><div class="pvd-label">あなたが食べたもの</div>${photo}<div class="pvd-mealname">${mealNames[mealId]}・合計 ${fmt(total)}点</div></section><section class="pvd-panel guide"><div class="pvd-label">あなたの適量ガイド</div><div class="pvd-guide-main">破線があなたの1食目安</div><div class="pvd-guide-sub">実際の点数と見比べて、どの群が足りているか・超えているかを確認できます。</div></section></div>${balanceHtml(scores,targets)}<div class="pvd-actions"><button class="pvd-stay">記録に戻る</button><button class="pvd-search">食品を確認する</button></div></div>`;
+    const ratio=guideRatio(scores,targets),pct=Math.round(ratio*100);
+    const guideVisual=m.img?`<div class="pvd-guide-visual"><img src="${m.img}" alt="適量の目安イメージ" style="transform:scale(${ratio})"><span class="pvd-guide-badge">目安 約${pct}%</span></div>`:`<div class="pvd-empty">破線と点数を見ながら<br>適量を確認</div>`;
+    const guideText=ratio<.98?`登録量の約${pct}%が目安イメージ`:'登録量は目安範囲内のイメージ';
+    back.innerHTML=`<div class="pvd-card" role="dialog" aria-modal="true" aria-label="食事の自己確認"><div class="pvd-head"><div><div class="pvd-kicker">PRIVATE VIEW</div><h3>食事の自己確認</h3></div><button class="pvd-close" aria-label="閉じる">×</button></div><div class="pvd-saved">登録しました（気づきを保存）</div><div class="pvd-compare"><section class="pvd-panel"><div class="pvd-label">あなたが食べたもの</div>${photo}<div class="pvd-mealname">${mealNames[mealId]}・合計 ${fmt(total)}点</div></section><section class="pvd-panel guide"><div class="pvd-label">あなたの適量ガイド</div>${guideVisual}<div class="pvd-guide-main" style="margin-top:8px">${guideText}</div><div class="pvd-guide-sub">写真の縮小は点数差を直感的に見るための目安表示です。下の4群バーで実際の点数を確認できます。</div></section></div>${balanceHtml(scores,targets)}${nutrientHtml(m,targets)}<div class="pvd-actions"><button class="pvd-stay">記録に戻る</button><button class="pvd-search">食品を確認する</button></div></div>`;
     document.body.appendChild(back);
     const close=()=>back.remove();
     back.querySelector('.pvd-close').onclick=close;back.querySelector('.pvd-stay').onclick=close;
