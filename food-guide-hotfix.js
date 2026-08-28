@@ -29,8 +29,9 @@
   document.head.appendChild(style);
 
   function ensureLaunch(){
-    const box=document.querySelector('#guideView .guideExplain');
-    if(!box||box.querySelector('.fdg-launch')) return;
+    const guide=document.querySelector('#guideView');
+    const box=guide?.querySelector('.guideExplain');
+    if(!box||guide.querySelector('.fdg-launch')) return;
     const btn=document.createElement('button');
     btn.type='button';btn.className='fdg-launch';btn.textContent='🔎 これ何群？ 食材を検索';
     btn.addEventListener('click',openGuide);
