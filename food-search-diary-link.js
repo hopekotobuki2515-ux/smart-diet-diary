@@ -11,6 +11,12 @@
     .fsd-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.fsd-head h3{margin:0;font-size:18px}.fsd-close{border:0;background:#f1eae4;border-radius:50%;width:36px;height:36px;font-size:20px}
     .fsd-name{margin:7px 0 11px;font-size:12px;color:#6d6057;line-height:1.5}.fsd-score{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:13px}.fsd-score span{border-radius:999px;padding:6px 8px;font-size:10.5px;font-weight:900;background:#fff0e5;color:#a95418}
     .fsd-label{font-size:12px;font-weight:900;margin:3px 0 8px}.fsd-meals{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}.fsd-meals button{border:1px solid #eadfd5;background:#fff;border-radius:12px;padding:11px 3px;font-size:12px;font-weight:900;color:#5f5147;touch-action:manipulation}
+    .fsd-confirm{position:fixed;inset:0;z-index:190;background:rgba(42,34,28,.42);display:flex;align-items:center;justify-content:center;padding:18px}
+    .fsd-confirmbox{width:min(420px,100%);background:#fffaf5;border-radius:20px;padding:18px;box-shadow:0 18px 50px rgba(50,34,22,.24)}
+    .fsd-confirmtext{font-size:13px;line-height:1.7;color:#51463e;font-weight:800}
+    .fsd-confirmactions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
+    .fsd-confirmactions button{min-height:44px;border-radius:12px;padding:10px 8px;font-size:12px;font-weight:900;touch-action:manipulation}
+    .fsd-continue{border:1px solid #eadfd5;background:#fff;color:#5f5147}.fsd-check{border:0;background:#f47a2a;color:#fff}
     .fsd-toast{position:fixed;left:50%;bottom:calc(98px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:190;background:#333;color:#fff;border-radius:999px;padding:10px 14px;font-size:12px;font-weight:800;white-space:nowrap;box-shadow:0 5px 16px rgba(0,0,0,.2)}
   `;
   document.head.appendChild(style);
@@ -68,14 +74,30 @@
     }catch(e){}
     window.__activeMealId=mealId;
     if(typeof render==='function')render();
-    document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id==='todayView'));
-    const navBtn=document.querySelector('.footnav button[data-view="todayView"]');
-    document.querySelectorAll('.footnav button').forEach(b=>b.classList.toggle('active',b===navBtn));
-    const app=document.querySelector('.app');if(app)app.scrollTop=0;
     return true;
   }
 
   function toast(text){const old=document.querySelector('.fsd-toast');if(old)old.remove();const el=document.createElement('div');el.className='fsd-toast';el.textContent=text;document.body.appendChild(el);setTimeout(()=>el.remove(),2200)}
+
+  function openDiary(mealId){
+    window.__activeMealId=mealId;
+    if(typeof render==='function')render();
+    document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id==='todayView'));
+    const navBtn=document.querySelector('.footnav button[data-view="todayView"]');
+    document.querySelectorAll('.footnav button').forEach(b=>b.classList.toggle('active',b===navBtn));
+    const app=document.querySelector('.app');if(app)app.scrollTop=0;
+  }
+
+  function confirmAdded(item,mealId){
+    const old=document.querySelector('.fsd-confirm');if(old)old.remove();
+    const box=document.createElement('div');box.className='fsd-confirm';
+    box.innerHTML=`<div class="fsd-confirmbox" role="dialog" aria-modal="true"><div class="fsd-confirmtext">「${item.name}」を${mealNames[mealId]}に追加しました。<br>続けて他の食品も追加しますか？</div><div class="fsd-confirmactions"><button type="button" class="fsd-continue">続けて追加する</button><button type="button" class="fsd-check">ダイアリーを確認する</button></div></div>`;
+    document.body.appendChild(box);
+    const close=()=>box.remove();
+    box.querySelector('.fsd-continue').onclick=close;
+    box.querySelector('.fsd-check').onclick=()=>{close();openDiary(mealId)};
+    box.addEventListener('click',e=>{if(e.target===box)close()});
+  }
 
   function openSheet(card){
     const item=parseItem(card);const old=document.querySelector('.fsd-backdrop');if(old)old.remove();
@@ -85,7 +107,7 @@
     document.body.appendChild(back);
     back.querySelector('.fsd-close').onclick=()=>back.remove();
     back.addEventListener('click',e=>{if(e.target===back)back.remove()});
-    back.querySelectorAll('[data-meal]').forEach(btn=>btn.onclick=()=>{const label=mealNames[btn.dataset.meal];if(addToDiary(item,btn.dataset.meal)){back.remove();toast(`${label}に追加しました`)}else toast('追加できませんでした')});
+    back.querySelectorAll('[data-meal]').forEach(btn=>btn.onclick=()=>{const mealId=btn.dataset.meal;if(addToDiary(item,mealId)){back.remove();confirmAdded(item,mealId)}else toast('追加できませんでした')});
   }
 
   function enhance(){
