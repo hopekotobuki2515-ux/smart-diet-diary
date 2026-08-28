@@ -1,6 +1,7 @@
 (()=>{
   if(window.__foodSearchSpacingHotfixLoaded) return;
   window.__foodSearchSpacingHotfixLoaded=true;
+
   const style=document.createElement('style');
   style.textContent=`
     #foodSearchView .fsx-wrap{
@@ -9,9 +10,24 @@
     #foodSearchView .fsx-card{
       margin-bottom:0!important;
     }
+    .app.food-search-active{
+      padding-bottom:0!important;
+    }
     #foodSearchView .fsx-session-summary{
-      margin-bottom:calc(88px + env(safe-area-inset-bottom))!important;
+      margin-bottom:calc(74px + env(safe-area-inset-bottom))!important;
     }
   `;
   document.head.appendChild(style);
+
+  const app=document.querySelector('.app');
+  const searchView=document.getElementById('foodSearchView');
+  if(!app||!searchView) return;
+
+  const sync=()=>{
+    app.classList.toggle('food-search-active',searchView.classList.contains('active'));
+  };
+
+  sync();
+  const mo=new MutationObserver(sync);
+  mo.observe(searchView,{attributes:true,attributeFilter:['class']});
 })();
