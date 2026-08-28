@@ -8,7 +8,7 @@
 <style>html,body{margin:0;width:100%;height:100%;height:100dvh;overflow:hidden;overscroll-behavior:none;touch-action:manipulation;background:#fffaf5}#appFrame{position:fixed;inset:0;width:100%;height:100dvh;border:0;background:#fffaf5}</style>
 </head>
 <body>
-<iframe id="appFrame" src="legacy.html?v=20260828c"></iframe>
+<iframe id="appFrame" src="legacy.html?v=20260828d"></iframe>
 <script>
 const frame=document.getElementById('appFrame');
 frame.addEventListener('load',()=>{
@@ -50,7 +50,7 @@ frame.addEventListener('load',()=>{
     doc.head.appendChild(guideStyle);
 
     const shell=doc.createElement('script');
-    shell.src='app-shell.js?v=20260828c';
+    shell.src='app-shell.js?v=20260828d';
     shell.onload=()=>{
       const greeting=doc.createElement('script');
       greeting.src='morning-greeting.js?v=20260826a';
@@ -61,7 +61,7 @@ frame.addEventListener('load',()=>{
       doc.body.appendChild(enter);
 
       const fix=doc.createElement('script');
-      fix.src='ui-hotfix.js?v=20260828c';
+      fix.src='ui-hotfix.js?v=20260828d';
       fix.onload=()=>{
         const photo=doc.createElement('script');
         photo.src='photo-hotfix.js?v=20260826u';
@@ -70,19 +70,24 @@ frame.addEventListener('load',()=>{
           fit.src='fit-hotfix.js?v=20260826y';
           fit.onload=()=>{
             const bottomNav=doc.createElement('script');
-            bottomNav.src='bottom-nav-hotfix.js?v=20260828c';
+            bottomNav.src='bottom-nav-hotfix.js?v=20260828d';
             bottomNav.onload=()=>{
               const guideText=doc.createElement('script');
-              guideText.src='guide-text-hotfix.js?v=20260828c';
+              guideText.src='guide-text-hotfix.js?v=20260828d';
               guideText.onload=()=>{
                 const foodGuide=doc.createElement('script');
-                foodGuide.src='food-guide-hotfix.js?v=20260828c';
+                foodGuide.src='food-guide-hotfix.js?v=20260828d';
                 foodGuide.onload=()=>{
                   const recovery=doc.createElement('script');
-                  recovery.src='recovery-hotfix.js?v=20260828c';
+                  recovery.src='recovery-hotfix.js?v=20260828d';
                   recovery.onload=()=>{
                     const search=doc.createElement('script');
-                    search.src='food-search-view.js?v=20260828c';
+                    search.src='food-search-view.js?v=20260828d';
+                    search.onload=()=>{
+                      const finalFix=doc.createElement('script');
+                      finalFix.src='final-route-hotfix.js?v=20260828d';
+                      doc.body.appendChild(finalFix);
+                    };
                     doc.body.appendChild(search);
                   };
                   doc.body.appendChild(recovery);
