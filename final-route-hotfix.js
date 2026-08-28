@@ -14,7 +14,7 @@
     if(!nav) return;
     let btn=nav.querySelector('button[data-view="foodSearchView"]');
     if(!btn){
-      btn=nav.querySelector('button[data-view="settingsView"]');
+      btn=nav.querySelector('button[data-view="guideView"]') || nav.querySelector('button[data-view="settingsView"]');
       if(!btn) return;
       btn.dataset.view='foodSearchView';
     }
@@ -60,9 +60,15 @@
   `;
   document.head.appendChild(style);
 
-  ensureFoodSearchNav();
-  requestAnimationFrame(ensureFoodSearchNav);
-  setTimeout(ensureFoodSearchNav,300);
+  const reapply=()=>ensureFoodSearchNav();
+  reapply();
+  requestAnimationFrame(reapply);
+  setTimeout(reapply,150);
+  setTimeout(reapply,500);
+
+  const mo=new MutationObserver(()=>requestAnimationFrame(reapply));
+  const navRoot=document.querySelector('.footnav');
+  if(navRoot) mo.observe(navRoot,{childList:true,subtree:true,attributes:true,attributeFilter:['data-view']});
 
   document.addEventListener('click',e=>{
     const foodBtn=e.target.closest('.footnav button[data-view="foodSearchView"]');
