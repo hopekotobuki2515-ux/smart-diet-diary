@@ -14,7 +14,7 @@
       padding-bottom:0!important;
     }
     #foodSearchView .fsx-session-summary{
-      margin-bottom:calc(74px + env(safe-area-inset-bottom))!important;
+      margin-bottom:calc(96px + env(safe-area-inset-bottom))!important;
     }
   `;
   document.head.appendChild(style);
