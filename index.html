@@ -8,7 +8,7 @@
 <style>html,body{margin:0;width:100%;height:100%;height:100dvh;overflow:hidden;overscroll-behavior:none;touch-action:manipulation;background:#fffaf5}#appFrame{position:fixed;inset:0;width:100%;height:100dvh;border:0;background:#fffaf5}</style>
 </head>
 <body>
-<iframe id="appFrame" src="legacy.html?v=20260828q"></iframe>
+<iframe id="appFrame" src="legacy.html?v=20260828r"></iframe>
 <script>
 const frame=document.getElementById('appFrame');
 frame.addEventListener('load',()=>{
@@ -50,7 +50,7 @@ frame.addEventListener('load',()=>{
     doc.head.appendChild(guideStyle);
 
     const shell=doc.createElement('script');
-    shell.src='app-shell.js?v=20260828q';
+    shell.src='app-shell.js?v=20260828r';
     shell.onload=()=>{
       const greeting=doc.createElement('script');
       greeting.src='morning-greeting.js?v=20260826a';
@@ -61,7 +61,7 @@ frame.addEventListener('load',()=>{
       doc.body.appendChild(enter);
 
       const fix=doc.createElement('script');
-      fix.src='ui-hotfix.js?v=20260828q';
+      fix.src='ui-hotfix.js?v=20260828r';
       fix.onload=()=>{
         const photo=doc.createElement('script');
         photo.src='photo-hotfix.js?v=20260826u';
@@ -70,37 +70,32 @@ frame.addEventListener('load',()=>{
           fit.src='fit-hotfix.js?v=20260826y';
           fit.onload=()=>{
             const bottomNav=doc.createElement('script');
-            bottomNav.src='bottom-nav-hotfix.js?v=20260828q';
+            bottomNav.src='bottom-nav-hotfix.js?v=20260828r';
             bottomNav.onload=()=>{
               const recovery=doc.createElement('script');
-              recovery.src='recovery-hotfix.js?v=20260828q';
+              recovery.src='recovery-hotfix.js?v=20260828r';
               recovery.onload=()=>{
                 const search=doc.createElement('script');
-                search.src='food-search-view.js?v=20260828q';
+                search.src='food-search-view.js?v=20260828r';
                 search.onload=()=>{
-                  const searchNav=doc.createElement('script');
-                  searchNav.src='search-nav-hotfix.js?v=20260828q';
-                  searchNav.onload=()=>{
-                    const performance=doc.createElement('script');
-                    performance.src='performance-hotfix.js?v=20260828q';
-                    performance.onload=()=>{
-                      const diaryLink=doc.createElement('script');
-                      diaryLink.src='food-search-diary-link.js?v=20260828q';
-                      diaryLink.onload=()=>{
-                        const spacing=doc.createElement('script');
-                        spacing.src='food-search-spacing-hotfix.js?v=20260828q';
-                        spacing.onload=()=>{
-                          const summary=doc.createElement('script');
-                          summary.src='food-search-summary.js?v=20260828q';
-                          doc.body.appendChild(summary);
-                        };
-                        doc.body.appendChild(spacing);
+                  const performance=doc.createElement('script');
+                  performance.src='performance-hotfix.js?v=20260828r';
+                  performance.onload=()=>{
+                    const diaryLink=doc.createElement('script');
+                    diaryLink.src='food-search-diary-link.js?v=20260828r';
+                    diaryLink.onload=()=>{
+                      const spacing=doc.createElement('script');
+                      spacing.src='food-search-spacing-hotfix.js?v=20260828r';
+                      spacing.onload=()=>{
+                        const summary=doc.createElement('script');
+                        summary.src='food-search-summary.js?v=20260828r';
+                        doc.body.appendChild(summary);
                       };
-                      doc.body.appendChild(diaryLink);
+                      doc.body.appendChild(spacing);
                     };
-                    doc.body.appendChild(performance);
+                    doc.body.appendChild(diaryLink);
                   };
-                  doc.body.appendChild(searchNav);
+                  doc.body.appendChild(performance);
                 };
                 doc.body.appendChild(search);
               };
