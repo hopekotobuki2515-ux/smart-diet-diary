@@ -1,0 +1,102 @@
+{
+  "title": "SMART Diet 一般食品マスター（資料確認済み）",
+  "basis": "SMART Dietテキスト実写資料。1点=80kcal。資料上で1点重量または点数計算が直接確認できた食品のみ収録。",
+  "updated": "2026-08-28",
+  "foods": [
+    {
+      "id": "verified_satoimo",
+      "name": "里芋",
+      "group": 3,
+      "one_point_weight_g": 140,
+      "point_basis": "食材重量 ÷ 1点重量",
+      "verified": true,
+      "source": "SMART Dietテキスト p.28 点数計算（解説）"
+    },
+    {
+      "id": "verified_banana",
+      "name": "バナナ（皮つき）",
+      "group": 3,
+      "one_point_weight_g": 158,
+      "weight_type": "廃棄込み重量",
+      "point_basis": "食材重量 ÷ 1点重量",
+      "verified": true,
+      "source": "SMART Dietテキスト p.28 点数計算（解説）"
+    },
+    {
+      "id": "verified_daikon",
+      "name": "大根",
+      "group": 3,
+      "one_point_weight_g": 440,
+      "point_basis": "食材重量 ÷ 1点重量",
+      "verified": true,
+      "source": "SMART Dietテキスト p.28 煮物の点数計算例"
+    },
+    {
+      "id": "verified_carrot",
+      "name": "にんじん",
+      "group": 3,
+      "one_point_weight_g": 220,
+      "point_basis": "食材重量 ÷ 1点重量",
+      "verified": true,
+      "source": "SMART Dietテキスト p.28 煮物の点数計算例"
+    },
+    {
+      "id": "verified_yaki_chikuwa",
+      "name": "焼き竹輪",
+      "group": 2,
+      "one_point_weight_g": 65,
+      "point_basis": "食材重量 ÷ 1点重量",
+      "verified": true,
+      "source": "SMART Dietテキスト p.28 煮物の点数計算例"
+    },
+    {
+      "id": "verified_soy_sauce",
+      "name": "しょうゆ",
+      "group": 4,
+      "one_point_weight_g": 110,
+      "point_basis": "食材重量 ÷ 1点重量",
+      "verified": true,
+      "source": "SMART Dietテキスト p.28 煮物の点数計算例"
+    },
+    {
+      "id": "verified_sugar",
+      "name": "砂糖",
+      "group": 4,
+      "one_point_weight_g": 21,
+      "point_basis": "食材重量 ÷ 1点重量",
+      "verified": true,
+      "source": "SMART Dietテキスト p.28 煮物の点数計算例"
+    }
+  ],
+  "calculation_examples": [
+    {
+      "name": "果汁入り野菜ジュース",
+      "amount": "200ml",
+      "calories": 68,
+      "points": 0.85,
+      "group": 4,
+      "verified": true,
+      "note": "果汁入り野菜ジュースは嗜好品のジュースとして扱う",
+      "source": "SMART Dietテキスト p.28 点数計算（解説）"
+    },
+    {
+      "name": "ノンオイルドレッシング",
+      "amount": "10g",
+      "points": 0.07,
+      "group": 4,
+      "verified": true,
+      "source": "SMART Dietテキスト p.28 点数計算（解説）"
+    }
+  ],
+  "group_definition": {
+    "1": ["牛乳・乳製品", "卵"],
+    "2": ["魚介類", "肉類", "豆・豆製品"],
+    "3": ["野菜", "きのこ・海藻", "いも", "果物"],
+    "4": ["米・パン・めん", "砂糖・調味料", "油脂・種実類", "酒・その他"]
+  },
+  "notes": [
+    "献立表に載っている使用量は1点重量とは限らないため、本マスターのone_point_weight_gには採用しない。",
+    "今後、80kcalガイドブック本体や追加のSMART Dietテキスト写真から確認できた食品を順次追加する。",
+    "推定値・一般的な栄養成分値とは別管理する。"
+  ]
+}
