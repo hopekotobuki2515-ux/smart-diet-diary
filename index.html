@@ -78,6 +78,10 @@ frame.addEventListener('load',()=>{
                 const search=doc.createElement('script');
                 search.src='food-search-view.js?v=20260828y';
                 search.onload=()=>{
+                  const group4Safe=doc.createElement('script');
+                  group4Safe.src='food-search-group4-safe-ui.js?v=20260829c';
+                  doc.body.appendChild(group4Safe);
+
                   const searchNav=doc.createElement('script');
                   searchNav.src='search-nav-hotfix.js?v=20260828y';
                   searchNav.onload=()=>{
