@@ -4,82 +4,82 @@
 
   const norm=s=>String(s??'').toLowerCase().replace(/\s+/g,'');
   const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-  let items=[];
+  const rows=Array.isArray(window.__group4FoodRows)?window.__group4FoodRows:[];
+  const items=rows.map((row,i)=>{
+    const aliases=[];
+    const name=String(row[0]||'');
+    if(name.includes('ポテトチップス')) aliases.push('ポテチ');
+    if(name.includes('ショートケーキ')) aliases.push('ケーキ');
+    if(name.includes('ケーキドーナッツ')) aliases.push('ケーキ','ドーナツ','ドーナッツ');
+    if(name.includes('イーストドーナッツ')) aliases.push('ドーナツ','ドーナッツ');
+    return {
+      id:`book_g4_${String(i+1).padStart(3,'0')}`,
+      name,
+      point_weight_g:Number(row[1]),
+      category:String(row[2]||''),
+      page:String(row[3]||''),
+      keywords:[name,String(row[2]||''),'第4群','80kcal','1点',...aliases]
+    };
+  });
   let busy=false;
 
   function currentFilters(view){
-    const storeBtn=view.querySelector('.fsx-storechips .fsx-chip.on');
-    const groupBtn=view.querySelector('.fsx-groupchips .fsx-chip.on');
     return {
-      store:storeBtn?.dataset.store||'all',
-      group:groupBtn?.dataset.group||'all',
+      store:view.querySelector('.fsx-storechips .fsx-chip.on')?.dataset.store||'all',
+      group:view.querySelector('.fsx-groupchips .fsx-chip.on')?.dataset.group||'all',
       q:norm(view.querySelector('.fsx-search')?.value||'')
     };
   }
 
+  function isOldGeneralGroup4(card){
+    if(card.classList.contains('fsx-book-item'))return false;
+    const store=card.querySelector('.fsx-store')?.textContent||'';
+    const groups=card.querySelector('.fsx-groups')?.textContent||'';
+    return store.startsWith('一般食材｜')&&groups.includes('第4群');
+  }
+
   function buildCard(item){
     const w=Number(item.point_weight_g);
-    return `<article class="fsx-item fsx-book-item" data-book-id="${esc(item.id)}"><div class="fsx-topline"><div><div class="fsx-name">${esc(item.name)}</div><div class="fsx-store">一般食材｜${esc(item.category)}</div></div><div class="fsx-kcal">80 kcal</div></div><div class="fsx-pfc">1点＝80kcal｜資料確認済み</div><div class="fsx-groups"><span class="fsx-g fsx-g4">第4群 1.0点</span></div><div class="fsx-ing">80kcalに相当する重量：${esc(w)}g</div></article>`;
+    return `<article class="fsx-item fsx-book-item" data-book-id="${esc(item.id)}"><div class="fsx-topline"><div><div class="fsx-name">${esc(item.name)}</div><div class="fsx-store">一般食材｜${esc(item.category)}</div></div><div class="fsx-kcal">${esc(w)} g</div></div><div class="fsx-pfc">1点＝80kcal</div><div class="fsx-groups"><span class="fsx-g fsx-g4">第4群 1.0点</span></div><div class="fsx-ing">80kcalに相当する食品重量：${esc(w)}g</div><div class="fsx-est">資料確認済み</div></article>`;
   }
 
   function augment(){
-    if(busy||!items.length)return;
+    if(busy)return;
     const view=document.getElementById('foodSearchView');
     const results=view?.querySelector('.fsx-results');
     if(!view||!results)return;
     busy=true;
+
     results.querySelectorAll('.fsx-book-item').forEach(x=>x.remove());
+    results.querySelectorAll('.fsx-item').forEach(card=>{if(isOldGeneralGroup4(card))card.remove();});
 
     const {store,group,q}=currentFilters(view);
     let add=[];
     if((store==='all'||store==='一般食材')&&(group==='all'||group==='group4')){
       add=items.filter(item=>{
         if(!q)return true;
-        return norm([item.name,item.category,...(item.keywords||[])].join(' ')).includes(q);
+        return norm([item.name,item.category,...item.keywords].join(' ')).includes(q);
       });
     }
-    if(add.length) results.insertAdjacentHTML('beforeend',add.map(buildCard).join(''));
+    if(add.length)results.insertAdjacentHTML('beforeend',add.map(buildCard).join(''));
 
     const count=view.querySelector('.fsx-count');
-    if(count){
-      const base=[...results.querySelectorAll('.fsx-item:not(.fsx-book-item)')].length;
-      count.textContent=`${base+add.length}件`;
-    }
+    if(count)count.textContent=`${results.querySelectorAll('.fsx-item').length}件`;
     const note=view.querySelector('.fsx-testnote');
-    if(note)note.textContent='一般食材の第4群は、80kcalガイドブックで確認した「80kcal＝1点」に相当する食品重量を表示しています。';
+    if(note)note.textContent='一般食材の第4群は「1点＝80kcal」に相当する食品重量（g）を表示しています。';
     busy=false;
   }
 
-  async function load(){
-    try{
-      const r=await fetch('food-search-group4-book.js?v=20260829d',{cache:'no-store'});
-      if(!r.ok)throw new Error('load failed');
-      const src=await r.text();
-      const m=src.match(/const rows=(\[[\s\S]*?\]);\s*const group4=/);
-      if(!m)throw new Error('rows not found');
-      const rows=JSON.parse(m[1]);
-      items=rows.map((row,i)=>{
-        const aliases=[];
-        if(row[0].includes('ポテトチップス')) aliases.push('ポテチ');
-        if(row[0].includes('ショートケーキ')) aliases.push('ケーキ');
-        if(row[0].includes('ケーキドーナッツ')) aliases.push('ケーキ','ドーナツ','ドーナッツ');
-        return {
-          id:`book_g4_${String(i+1).padStart(3,'0')}`,
-          name:row[0],point_weight_g:Number(row[1]),category:row[2],page:row[3],
-          keywords:[row[0],row[2],'第4群','80kcal','1点',...aliases]
-        };
-      });
-      augment();
-      const view=document.getElementById('foodSearchView');
-      view?.addEventListener('click',()=>setTimeout(augment,20),true);
-      view?.querySelector('.fsx-search')?.addEventListener('input',()=>setTimeout(augment,20));
-      const results=view?.querySelector('.fsx-results');
-      if(results){
-        const mo=new MutationObserver(()=>{if(!busy)setTimeout(augment,0)});
-        mo.observe(results,{childList:true});
-      }
-    }catch(e){console.error('group4 safe ui',e)}
+  function start(){
+    augment();
+    const view=document.getElementById('foodSearchView');
+    view?.addEventListener('click',()=>setTimeout(augment,30),true);
+    view?.querySelector('.fsx-search')?.addEventListener('input',()=>setTimeout(augment,30));
+    const results=view?.querySelector('.fsx-results');
+    if(results){
+      const mo=new MutationObserver(()=>{if(!busy)setTimeout(augment,0)});
+      mo.observe(results,{childList:true});
+    }
   }
-
-  setTimeout(load,0);
+  setTimeout(start,0);
 })();
