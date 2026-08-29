@@ -4,31 +4,24 @@
 
   const norm=s=>String(s??'').toLowerCase().replace(/\s+/g,'');
   const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-  const rows=Array.isArray(window.__group4FoodRows)?window.__group4FoodRows:[];
-  const items=rows.map((row,i)=>{
-    const aliases=[];
-    const name=String(row[0]||'');
-    if(name.includes('ポテトチップス')) aliases.push('ポテチ');
-    if(name.includes('ショートケーキ')) aliases.push('ケーキ');
-    if(name.includes('ケーキドーナッツ')) aliases.push('ケーキ','ドーナツ','ドーナッツ');
-    if(name.includes('イーストドーナッツ')) aliases.push('ドーナツ','ドーナッツ');
-    return {
-      id:`book_g4_${String(i+1).padStart(3,'0')}`,
-      name,
-      point_weight_g:Number(row[1]),
-      category:String(row[2]||''),
-      page:String(row[3]||''),
-      keywords:[name,String(row[2]||''),'第4群','80kcal','1点',...aliases]
-    };
-  });
+  let items=[];
   let busy=false;
 
+  function prepareItems(){
+    const rows=Array.isArray(window.__group4FoodRows)?window.__group4FoodRows:[];
+    items=rows.map((row,i)=>{
+      const aliases=[];
+      const name=String(row[0]||'');
+      if(name.includes('ポテトチップス')) aliases.push('ポテチ');
+      if(name.includes('ショートケーキ')) aliases.push('ケーキ');
+      if(name.includes('ケーキドーナッツ')) aliases.push('ケーキ','ドーナツ','ドーナッツ');
+      if(name.includes('イーストドーナッツ')) aliases.push('ドーナツ','ドーナッツ');
+      return {id:`book_g4_${String(i+1).padStart(3,'0')}`,name,point_weight_g:Number(row[1]),category:String(row[2]||''),page:String(row[3]||''),keywords:[name,String(row[2]||''),'第4群','80kcal','1点',...aliases]};
+    });
+  }
+
   function currentFilters(view){
-    return {
-      store:view.querySelector('.fsx-storechips .fsx-chip.on')?.dataset.store||'all',
-      group:view.querySelector('.fsx-groupchips .fsx-chip.on')?.dataset.group||'all',
-      q:norm(view.querySelector('.fsx-search')?.value||'')
-    };
+    return {store:view.querySelector('.fsx-storechips .fsx-chip.on')?.dataset.store||'all',group:view.querySelector('.fsx-groupchips .fsx-chip.on')?.dataset.group||'all',q:norm(view.querySelector('.fsx-search')?.value||'')};
   }
 
   function isOldGeneralGroup4(card){
@@ -44,22 +37,18 @@
   }
 
   function augment(){
-    if(busy)return;
+    if(busy||!items.length)return;
     const view=document.getElementById('foodSearchView');
     const results=view?.querySelector('.fsx-results');
     if(!view||!results)return;
     busy=true;
-
     results.querySelectorAll('.fsx-book-item').forEach(x=>x.remove());
     results.querySelectorAll('.fsx-item').forEach(card=>{if(isOldGeneralGroup4(card))card.remove();});
 
     const {store,group,q}=currentFilters(view);
     let add=[];
     if((store==='all'||store==='一般食材')&&(group==='all'||group==='group4')){
-      add=items.filter(item=>{
-        if(!q)return true;
-        return norm([item.name,item.category,...item.keywords].join(' ')).includes(q);
-      });
+      add=items.filter(item=>!q||norm([item.name,item.category,...item.keywords].join(' ')).includes(q));
     }
     if(add.length)results.insertAdjacentHTML('beforeend',add.map(buildCard).join(''));
 
@@ -70,7 +59,8 @@
     busy=false;
   }
 
-  function start(){
+  function bind(){
+    prepareItems();
     augment();
     const view=document.getElementById('foodSearchView');
     view?.addEventListener('click',()=>setTimeout(augment,30),true);
@@ -81,5 +71,14 @@
       mo.observe(results,{childList:true});
     }
   }
-  setTimeout(start,0);
+
+  if(Array.isArray(window.__group4FoodRows)){
+    bind();
+  }else{
+    const s=document.createElement('script');
+    s.src='food-search-group4-data.js?v=20260829e';
+    s.onload=bind;
+    s.onerror=()=>console.error('group4 data load failed');
+    document.body.appendChild(s);
+  }
 })();
