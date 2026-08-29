@@ -19,7 +19,7 @@
 
   function buildCard(item){
     const w=Number(item.point_weight_g);
-    return `<article class="fsx-item fsx-book-item" data-book-id="${esc(item.id)}"><div class="fsx-topline"><div><div class="fsx-name">${esc(item.name)}</div><div class="fsx-store">一般食材｜${esc(item.category)}</div></div><div class="fsx-kcal">80 kcal</div></div><div class="fsx-pfc">80kcal＝1点｜資料確認済み</div><div class="fsx-groups"><span class="fsx-g fsx-g4">第4群 1.0点</span></div><div class="fsx-ing">1点の目安量：${esc(w)}g</div></article>`;
+    return `<article class="fsx-item fsx-book-item" data-book-id="${esc(item.id)}"><div class="fsx-topline"><div><div class="fsx-name">${esc(item.name)}</div><div class="fsx-store">一般食材｜${esc(item.category)}</div></div><div class="fsx-kcal">80 kcal</div></div><div class="fsx-pfc">1点＝80kcal｜資料確認済み</div><div class="fsx-groups"><span class="fsx-g fsx-g4">第4群 1.0点</span></div><div class="fsx-ing">80kcalに相当する重量：${esc(w)}g</div></article>`;
   }
 
   function augment(){
@@ -38,9 +38,7 @@
         return norm([item.name,item.category,...(item.keywords||[])].join(' ')).includes(q);
       });
     }
-    if(add.length){
-      results.insertAdjacentHTML('beforeend',add.map(buildCard).join(''));
-    }
+    if(add.length) results.insertAdjacentHTML('beforeend',add.map(buildCard).join(''));
 
     const count=view.querySelector('.fsx-count');
     if(count){
@@ -48,23 +46,29 @@
       count.textContent=`${base+add.length}件`;
     }
     const note=view.querySelector('.fsx-testnote');
-    if(note)note.textContent='一般食材の第4群は、80kcalガイドブックで確認した「80kcal＝1点」に相当する重量を表示しています。';
+    if(note)note.textContent='一般食材の第4群は、80kcalガイドブックで確認した「80kcal＝1点」に相当する食品重量を表示しています。';
     busy=false;
   }
 
   async function load(){
     try{
-      const r=await fetch('food-search-group4-book.js?v=20260829c',{cache:'no-store'});
+      const r=await fetch('food-search-group4-book.js?v=20260829d',{cache:'no-store'});
       if(!r.ok)throw new Error('load failed');
       const src=await r.text();
-      const m=src.match(/const rows=(\[[\s\S]*?\]);\s*const items=/);
+      const m=src.match(/const rows=(\[[\s\S]*?\]);\s*const group4=/);
       if(!m)throw new Error('rows not found');
       const rows=JSON.parse(m[1]);
-      items=rows.map((row,i)=>({
-        id:`book_g4_${String(i+1).padStart(3,'0')}`,
-        name:row[0],point_weight_g:Number(row[1]),category:row[2],page:row[3],
-        keywords:[row[0],row[2],'第4群','80kcal','1点','ポテチ','ケーキ']
-      }));
+      items=rows.map((row,i)=>{
+        const aliases=[];
+        if(row[0].includes('ポテトチップス')) aliases.push('ポテチ');
+        if(row[0].includes('ショートケーキ')) aliases.push('ケーキ');
+        if(row[0].includes('ケーキドーナッツ')) aliases.push('ケーキ','ドーナツ','ドーナッツ');
+        return {
+          id:`book_g4_${String(i+1).padStart(3,'0')}`,
+          name:row[0],point_weight_g:Number(row[1]),category:row[2],page:row[3],
+          keywords:[row[0],row[2],'第4群','80kcal','1点',...aliases]
+        };
+      });
       augment();
       const view=document.getElementById('foodSearchView');
       view?.addEventListener('click',()=>setTimeout(augment,20),true);
