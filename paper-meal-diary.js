@@ -11,6 +11,9 @@
     : null;
   let masterStatus = 'loading';
   let openHistoryKey = '';
+  let selectionMaster = [];
+  let selectionStatus = 'loading';
+  const quickGrams = [1, 2, 3, 5, 10, 15, 20, 30, 40, 50, 60, 65, 75, 80, 100, 120, 150, 200, 250, 300];
 
   const categories = new Map([
     ...['アジフライ', 'あじフライ', '鯵フライ'].map(name => [name, ['第2群 魚介類', '第4群 油脂類']]),
@@ -55,7 +58,7 @@
       name.textContent = phrase;
       const marksLine = document.createElement('span');
       marksLine.className = 'paperMenuMarks';
-      marksLine.textContent = marks.length ? marks.map(mark => '○ ' + mark + (mark === '第4群 油脂類' ? '（量不明）' : '')).join('　') : '食品群未確認';
+      marksLine.textContent = marks.length ? marks.map(mark => '○ ' + mark + (mark === '第4群 油脂類' && points == null ? '（量不明）' : '')).join('　') : '食品群未確認';
       const score = document.createElement('small');
       score.textContent = points == null ? '点数未計算' : format(points);
       row.append(name, marksLine, score);
@@ -63,8 +66,20 @@
     }));
   }
 
-  function mealPoints(meal) {
-    const {scores} = scoreMemo(meal.mealMemo || '');
+  function readMeal(meal) {
+    const {scores, unmatched, rows} = scoreMemo(meal.mealMemo || '');
+    for (const ingredient of meal.ingredients || []) {
+      const {name, dish, grams, group, category, gramsPerPoint} = ingredient;
+      const points = grams == null ? null : grams / gramsPerPoint;
+      const phrase = [dish, name].filter(Boolean).join(' ／ ') + (grams == null ? '' : ' ' + grams + 'g');
+      rows.push({phrase, marks: ['第' + group + '群 ' + category], points});
+      if (points == null) unmatched.push(phrase);
+      else scores[group] = (scores[group] || 0) + points;
+    }
+    return {scores, unmatched, rows};
+  }
+
+  function mealPoints(meal, scores = readMeal(meal).scores) {
     return groups.map(group => meal.mealPoints?.[group] ?? scores[group] ?? null);
   }
 
@@ -73,11 +88,11 @@
     const sums = groups.map((_, index) => total(points.map(row => row[index])));
     const recorded = mealDefs.filter(([id]) => {
       const meal = day[id];
-      return meal.mealMemo?.trim() || meal.img || meal.mealTime || Object.keys(meal.mealPoints || {}).length;
+      return meal.ingredients?.length || meal.mealMemo?.trim() || meal.img || meal.mealTime || Object.keys(meal.mealPoints || {}).length;
     });
     const incomplete = recorded.some(([id]) => {
       const meal = day[id];
-      return scoreMemo(meal.mealMemo || '').unmatched.length || mealPoints(meal).every(value => value == null);
+      return readMeal(meal).unmatched.length || mealPoints(meal).every(value => value == null);
     });
     summary.querySelector('[data-day-total]').textContent = format(total(sums));
     summary.querySelector('[data-day-target]').textContent = '設定上の目安 ' + (state.sex === 'male' ? 21 : 15) + '点';
@@ -97,10 +112,24 @@
     panel.className = 'paperMeal';
     panel.innerHTML = `
       <label class="paperField">食べた時刻<input type="time" name="mealTime"></label>
-      <label class="paperField">メニュー（1品ずつ）<textarea name="mealMemo" rows="3" maxlength="1000"
-        placeholder="例：アジフライ&#10;ご飯50g"></textarea></label>
-      <ul class="paperMenu" data-paper-menu aria-label="メニューの食品群"></ul>
-      <p class="paperHint">量が分かる食品は点数も表示します。1点＝80kcal。</p>
+      <h3 class="paperIngredientTitle">料理と食材を記録</h3>
+      <label class="paperField">料理名（任意）<input name="ingredientDish" maxlength="100" placeholder="例：魚のホイル焼き"></label>
+      <label class="paperField">食材を検索<input type="search" name="ingredientSearch" maxlength="100" autocomplete="off" placeholder="例：ご飯、ささみ、ごま油"></label>
+      <label class="paperField">食材の候補<select name="ingredientChoice"><option value="">食材名を検索してください</option></select></label>
+      <label class="paperField">食べた量<select name="ingredientAmount">
+        <option value="">量がわからない</option>
+        ${quickGrams.map(value => `<option value="${value}">${value}g</option>`).join('')}
+        <option value="custom">グラムを入力する</option>
+      </select></label>
+      <label class="paperField" data-custom-grams hidden>食べた量（g）<input type="number" name="ingredientGrams" min="0.1" max="10000" step="0.1" inputmode="decimal"></label>
+      <p class="paperHint" data-ingredient-status aria-live="polite"></p>
+      <button class="paperAction" type="button" data-add-ingredient disabled>この食材を追加</button>
+      <details class="paperLegacy"><summary>メニューの補足・従来のメモ入力</summary>
+        <label class="paperField">メニューのメモ<textarea name="mealMemo" rows="3" maxlength="1000"
+          placeholder="例：アジフライ"></textarea></label>
+      </details>
+      <ul class="paperMenu" data-paper-menu aria-label="食材と食品群"></ul>
+      <p class="paperHint">1点＝80kcal。量がわからない食材は、食品群だけ記録できます。</p>
       <div class="paperHeading"><h3>この食事の点数</h3><output data-meal-total>—</output></div>
       <div class="paperGroups">${groups.map(group => `<label class="paperPoint g${group}">第${group}群
         <input type="text" inputmode="decimal" data-point="${group}" maxlength="9" placeholder="—">
@@ -112,6 +141,7 @@
           <strong data-day-group="${group}">—</strong></div>`).join('')}</div>
         <p class="paperHint" data-day-target></p>
         <p class="paperHint" data-day-note></p>
+        <details class="paperLegacy"><summary>朝食・昼食・夕食・間食の記録をまとめて見る</summary><div data-day-meals></div></details>
       </section>`;
 
     const time = panel.querySelector('[name="mealTime"]');
@@ -121,8 +151,37 @@
     memo.value = meal.mealMemo || '';
 
     function update() {
-      const {scores, unmatched, rows} = scoreMemo(meal.mealMemo || '');
-      renderMenu(panel.querySelector('[data-paper-menu]'), rows);
+      const {scores, unmatched, rows} = readMeal(meal);
+      const menu = panel.querySelector('[data-paper-menu]');
+      renderMenu(menu, rows);
+      const ingredients = meal.ingredients || [];
+      [...menu.children].slice(menu.children.length - ingredients.length).forEach((row, index) => {
+        const remove = document.createElement('button');
+        remove.type = 'button';
+        remove.textContent = '削除';
+        remove.setAttribute('aria-label', ingredients[index].name + 'を削除');
+        remove.onclick = () => { ingredients.splice(index, 1); update(); };
+        row.append(remove);
+      });
+      const overview = panel.querySelector('[data-day-meals]');
+      overview.replaceChildren(...mealDefs.map(([mealId, label]) => {
+        const entry = day[mealId];
+        const section = document.createElement('section');
+        const heading = document.createElement('h4');
+        const {rows: mealRows, scores: mealScores} = readMeal(entry);
+        const points = mealPoints(entry, mealScores);
+        heading.textContent = [label, entry.mealTime, format(total(points))].filter(Boolean).join('　');
+        const list = document.createElement('ul');
+        list.className = 'paperMenu';
+        renderMenu(list, mealRows);
+        const subtotal = document.createElement('p');
+        subtotal.className = 'paperHint';
+        if (points.some(value => value != null)) {
+          subtotal.textContent = groups.map((group, index) => '第' + group + '群 ' + format(points[index])).join('　');
+        }
+        section.append(heading, list, subtotal);
+        return section;
+      }));
       fields.forEach(input => {
         const group = input.dataset.point;
         const manual = meal.mealPoints?.[group];
@@ -141,7 +200,57 @@
       updateDay(panel, day);
     }
 
-    time.addEventListener('input', () => { meal.mealTime = time.value; });
+    const dish = panel.querySelector('[name="ingredientDish"]');
+    const search = panel.querySelector('[name="ingredientSearch"]');
+    const choice = panel.querySelector('[name="ingredientChoice"]');
+    const amount = panel.querySelector('[name="ingredientAmount"]');
+    const custom = panel.querySelector('[name="ingredientGrams"]');
+    const add = panel.querySelector('[data-add-ingredient]');
+    const feedback = panel.querySelector('[data-ingredient-status]');
+    const grams = () => amount.value === '' ? null : Number(amount.value === 'custom' ? custom.value : amount.value);
+    const selected = () => choice.value === '' ? null : selectionMaster[Number(choice.value)];
+
+    function updateSelection() {
+      const food = selected();
+      const value = grams();
+      const validAmount = value == null || Number.isFinite(value) && value >= 0.1 && value <= 10000;
+      add.disabled = !food || !validAmount;
+      custom.closest('label').hidden = amount.value !== 'custom';
+      feedback.textContent = food
+        ? food.group + ' ' + food.category + ' ／ ' + (value == null ? '量不明' : validAmount ? format(value / food.gramsPerPoint) : '0.1〜10000gで入力してください。')
+        : selectionStatus === 'ready' ? '' : selectionStatus === 'loading' ? '食品マスターを読み込んでいます。' : '食品マスターを読み込めませんでした。';
+    }
+
+    function findIngredients() {
+      const query = key(search.value).toLowerCase();
+      const aliases = {'ご飯':'めし・水稲・精白米', 'ごはん':'めし・水稲・精白米', 'ささみ':'ささ身'};
+      const match = key(aliases[query] || query).toLowerCase();
+      const results = query ? selectionMaster.filter(food => key(food.name).toLowerCase().includes(match)).slice(0, 30) : [];
+      const options = results.map(food => new Option(food.name + '（' + food.group + '・' + food.category + '）', food.index));
+      const placeholder = query && selectionStatus === 'ready' && !options.length ? '一致する食材がありません' : '食材を選択';
+      choice.replaceChildren(new Option(placeholder, ''), ...options);
+      updateSelection();
+    }
+
+    search.addEventListener('input', findIngredients);
+    choice.addEventListener('change', updateSelection);
+    amount.addEventListener('change', updateSelection);
+    custom.addEventListener('input', updateSelection);
+    add.addEventListener('click', () => {
+      const food = selected();
+      if (!food || add.disabled) return;
+      const {name, group, category, gramsPerPoint} = food;
+      meal.ingredients ??= [];
+      meal.ingredients.push({dish: dish.value.trim(), name, group: Number(group[1]), category, gramsPerPoint, grams: grams()});
+      search.value = '';
+      amount.value = '';
+      custom.value = '';
+      findIngredients();
+      update();
+      search.focus();
+    });
+    findIngredients();
+    time.addEventListener('input', () => { meal.mealTime = time.value; update(); });
     memo.addEventListener('input', () => { meal.mealMemo = memo.value; update(); });
     fields.forEach(input => {
       input.addEventListener('input', () => {
@@ -182,8 +291,14 @@
     .paperMeal,.paperDay{display:grid;gap:8px;margin-top:12px}
     .paperDay{border-top:1px solid var(--line);padding-top:10px}
     .paperField{display:grid;gap:4px;font-weight:700;font-size:14px}
-    .paperField input,.paperField textarea,.paperPoint input{width:100%;min-width:0;border:1px solid #baa89c;border-radius:9px;background:#fff;padding:8px;color:#392e28;font:inherit;font-size:16px}
+    .paperField input,.paperField textarea,.paperField select,.paperPoint input{width:100%;min-width:0;border:1px solid #baa89c;border-radius:9px;background:#fff;padding:8px;color:#392e28;font:inherit;font-size:16px}
     .paperField textarea{resize:vertical}
+    .paperField[hidden]{display:none}
+    .paperIngredientTitle{font-size:16px;margin:6px 0 0}
+    .paperAction{padding:10px;min-height:44px;border-radius:9px;border:1px solid #b35418;background:#fff4e8;color:#84380b;font-weight:700}
+    .paperAction:disabled{opacity:.55}
+    .paperMenu button{grid-column:2;min-height:34px;border:1px solid #baa89c;border-radius:6px;background:#fff;color:#392e28}
+    [data-day-meals] h4{margin:10px 0 4px}
     .paperHeading{display:flex;justify-content:space-between;align-items:center;gap:8px}
     .paperHeading h3{font-size:16px;margin:0}
     .paperHeading output{font-weight:800;font-size:18px}
@@ -211,7 +326,21 @@
   };
   mount();
   window.getPaperMealPoints = mealPoints;
-  window.renderPaperMealMenu = (list, memo) => renderMenu(list, scoreMemo(memo || '').rows);
+  window.renderPaperMealMenu = (list, meal) => renderMenu(list, readMeal(meal).rows);
+
+  fetch('food-master.json')
+    .then(response => {
+      if (!response.ok) throw new Error('Food master unavailable');
+      return response.json();
+    })
+    .then(master => {
+      selectionMaster = master.foods.filter(food =>
+        /^第[1-4]群$/.test(food.group) && Number.isFinite(food.gramsPerPoint) && food.gramsPerPoint > 0);
+      selectionMaster.forEach((food, index) => { food.index = index; });
+      selectionStatus = 'ready';
+    })
+    .catch(() => { selectionStatus = 'failed'; })
+    .finally(() => document.querySelector('[name="ingredientSearch"]')?.dispatchEvent(new Event('input')));
 
   fetch('general-food-master-verified.json')
     .then(response => {

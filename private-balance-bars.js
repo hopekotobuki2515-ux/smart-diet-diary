@@ -87,7 +87,7 @@
     if(!d)return;
     const mealId=currentMealId(),m=d[mealId]||{},scores=mealScores(m),targets=targetsFor(mealId);
     const paperPoints = window.getPaperMealPoints?.(m);
-    const hasPaperRecord = paperPoints && (m.mealMemo?.trim() || m.mealTime || paperPoints.some(value => value != null) || (m.img && Object.values(scores).every(value => value === 0)));
+    const hasPaperRecord = paperPoints && (m.ingredients?.length || m.mealMemo?.trim() || m.mealTime || paperPoints.some(value => value != null) || (m.img && Object.values(scores).every(value => value === 0)));
     const old=document.querySelector('.pvd-backdrop');if(old)old.remove();
     const back=document.createElement('div');back.className='pvd-backdrop';
     const photo=m.img?`<img class="pvd-photo" src="${m.img}" alt="登録した食事">`:`<div class="pvd-empty">${mealNames[mealId]}の写真または<br>食品データを確認できます</div>`;
@@ -101,7 +101,7 @@
       back.querySelector('.pvd-compare').innerHTML = `<section class="pvd-panel">${photo}<div class="pvd-mealname">${mealNames[mealId]}</div><p class="paperHint"></p><ul class="paperMenu" aria-label="メニューの食品群"></ul></section>`;
       back.querySelector('.pvd-compare').style.display = 'block';
       back.querySelector('.paperHint').textContent = m.mealTime || '';
-      window.renderPaperMealMenu?.(back.querySelector('.paperMenu'), m.mealMemo);
+      window.renderPaperMealMenu?.(back.querySelector('.paperMenu'), m);
       back.querySelector('.fsd-balance').innerHTML = `<div class="fsd-balance-title">この食事の点数</div><div class="paperGroups">${values.map((value, index) => `<div class="paperPoint g${index + 1}">第${index + 1}群<strong>${value}</strong></div>`).join('')}</div>`;
       back.querySelector('.pvd-nutrients').remove();
     }
