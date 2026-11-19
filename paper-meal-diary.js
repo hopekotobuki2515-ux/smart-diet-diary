@@ -12,22 +12,55 @@
   let masterStatus = 'loading';
   let openHistoryKey = '';
 
+  const categories = new Map([
+    ...['アジフライ', 'あじフライ', '鯵フライ'].map(name => [name, ['第2群 魚介類', '第4群 油脂類']]),
+    ...['ご飯', 'ごはん', '白ご飯', '白ごはん'].map(name => [name, ['第4群 主食']]),
+    ['焼き竹輪', ['第2群 魚介類']],
+    ['にんじん', ['第3群 野菜']],
+    ['大根', ['第3群 野菜']],
+    ['里芋', ['第3群 いも']],
+    ['しょうゆ', ['第4群 調味料']],
+    ['砂糖', ['第4群 砂糖']],
+  ]);
+
   function scoreMemo(memo) {
     const scores = {};
     const unmatched = [];
+    const rows = [];
     const phrases = memo.normalize('NFKC').split(/[、,。;\n]+/).map(text => text.trim()).filter(Boolean);
 
     for (const phrase of phrases) {
       const match = key(phrase).match(/^(.+?)(\d+(?:\.\d+)?)(?:グラム|g)$/i);
-      const food = match && foods.get(match[1]);
+      const name = match?.[1] ?? key(phrase);
+      const food = foods.get(name);
       const grams = match ? Number(match[2]) : 0;
-      if (!food || !Number.isFinite(grams) || grams <= 0 || grams > 10000) {
+      const points = food && Number.isFinite(grams) && grams > 0 && grams <= 10000
+        ? grams / food.one_point_weight_g
+        : null;
+      const marks = categories.get(name) ?? (food ? ['第' + food.group + '群'] : []);
+      rows.push({phrase, marks, points});
+      if (points == null) {
         unmatched.push(phrase);
-        continue;
+      } else {
+        scores[food.group] = (scores[food.group] || 0) + points;
       }
-      scores[food.group] = (scores[food.group] || 0) + grams / food.one_point_weight_g;
     }
-    return {scores, unmatched};
+    return {scores, unmatched, rows};
+  }
+
+  function renderMenu(list, rows) {
+    list.replaceChildren(...rows.map(({phrase, marks, points}) => {
+      const row = document.createElement('li');
+      const name = document.createElement('strong');
+      name.textContent = phrase;
+      const marksLine = document.createElement('span');
+      marksLine.className = 'paperMenuMarks';
+      marksLine.textContent = marks.length ? marks.map(mark => '○ ' + mark + (mark === '第4群 油脂類' ? '（量不明）' : '')).join('　') : '食品群未確認';
+      const score = document.createElement('small');
+      score.textContent = points == null ? '点数未計算' : format(points);
+      row.append(name, marksLine, score);
+      return row;
+    }));
   }
 
   function mealPoints(meal) {
@@ -64,9 +97,10 @@
     panel.className = 'paperMeal';
     panel.innerHTML = `
       <label class="paperField">食べた時刻<input type="time" name="mealTime"></label>
-      <label class="paperField">食べたもののメモ<textarea name="mealMemo" rows="3" maxlength="1000"
-        placeholder="例：ご飯50g、焼き竹輪65g"></textarea></label>
-      <p class="paperHint">1点＝80kcal。食品ごとの目安量から点数を自動入力します。写真とメモだけでも保存できます。</p>
+      <label class="paperField">メニュー（1品ずつ）<textarea name="mealMemo" rows="3" maxlength="1000"
+        placeholder="例：アジフライ&#10;ご飯50g"></textarea></label>
+      <ul class="paperMenu" data-paper-menu aria-label="メニューの食品群"></ul>
+      <p class="paperHint">量が分かる食品は点数も表示します。1点＝80kcal。</p>
       <div class="paperHeading"><h3>この食事の点数</h3><output data-meal-total>—</output></div>
       <div class="paperGroups">${groups.map(group => `<label class="paperPoint g${group}">第${group}群
         <input type="text" inputmode="decimal" data-point="${group}" maxlength="9" placeholder="—">
@@ -87,7 +121,8 @@
     memo.value = meal.mealMemo || '';
 
     function update() {
-      const {scores, unmatched} = scoreMemo(meal.mealMemo || '');
+      const {scores, unmatched, rows} = scoreMemo(meal.mealMemo || '');
+      renderMenu(panel.querySelector('[data-paper-menu]'), rows);
       fields.forEach(input => {
         const group = input.dataset.point;
         const manual = meal.mealPoints?.[group];
@@ -157,7 +192,11 @@
     .paperPoint input{text-align:center;padding:5px 1px;min-height:36px}
     .paperPoint input[aria-invalid=true]{border-color:#a32028}
     .paperPoint small,.paperHint{font-size:12px;color:#5f5148;line-height:1.55;margin:0;overflow-wrap:anywhere}
-    .paperHint:empty{display:none}
+    .paperHint:empty,.paperMenu:empty{display:none}
+    .paperMenu{display:grid;gap:5px;list-style:none;margin:0;padding:0}
+    .paperMenu li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 8px;padding:7px 9px;border:1px solid #e5ddd4;border-radius:8px;background:#fff;overflow-wrap:anywhere;font-size:13px}
+    .paperMenuMarks{grid-column:1/-1;color:#554339}
+    .paperMenu small{grid-row:1;grid-column:2;color:#5f5148;font-size:11px}
     .paperLegacy{margin-top:14px;font-size:13px}
     .paperLegacy summary{cursor:pointer;min-height:44px;align-content:center}
     .paperPoint.g1{background:#eff7ff}.paperPoint.g2{background:#fff1f4}
@@ -172,6 +211,7 @@
   };
   mount();
   window.getPaperMealPoints = mealPoints;
+  window.renderPaperMealMenu = (list, memo) => renderMenu(list, scoreMemo(memo || '').rows);
 
   fetch('general-food-master-verified.json')
     .then(response => {
