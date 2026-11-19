@@ -72,7 +72,8 @@
       const {name, dish, grams, group, category, gramsPerPoint} = ingredient;
       const points = grams == null ? null : grams / gramsPerPoint;
       const phrase = [dish, name].filter(Boolean).join(' ／ ') + (grams == null ? '' : ' ' + grams + 'g');
-      rows.push({phrase, marks: ['第' + group + '群 ' + category], points});
+      const detail = name + (grams == null ? '（量不明）' : ' ' + grams + 'g');
+      rows.push({phrase, dish, detail, marks: ['第' + group + '群 ' + category], points});
       if (points == null) unmatched.push(phrase);
       else scores[group] = (scores[group] || 0) + points;
     }
@@ -100,6 +101,123 @@
     groups.forEach((group, index) => {
       summary.querySelector('[data-day-group="' + group + '"]').textContent = format(sums[index]);
     });
+  }
+
+  function addText(parent, tag, text) {
+    const element = document.createElement(tag);
+    element.textContent = text;
+    parent.append(element);
+    return element;
+  }
+
+  function addScoreRow(body, label, values) {
+    const row = body.insertRow();
+    addText(row, 'th', label).scope = 'row';
+    for (const value of values) row.insertCell().textContent = value;
+    return row;
+  }
+
+  function showDayPreview(day, opener) {
+    const dialog = document.createElement('dialog');
+    dialog.className = 'paperPreview';
+    dialog.setAttribute('aria-labelledby', 'paper-preview-title');
+    dialog.innerHTML = `
+      <header><h2 id="paper-preview-title">食事ダイアリー</h2>
+        <button type="button" class="paperAction" autofocus>閉じる</button></header>
+      <div class="paperSheet">
+        <p class="paperPreviewDate"></p>
+        <dl class="paperMeasurements"></dl>
+        <table aria-label="食材と食品群の点数">
+          <colgroup><col class="paperItemColumn"><col span="4"></colgroup>
+          <thead><tr><th scope="col">メニュー・食材</th>
+            ${groups.map(group => `<th class="g${group}" scope="col">第${group}群</th>`).join('')}</tr></thead>
+          <tfoot></tfoot>
+        </table>
+        <p class="paperHint">1点＝80kcal。○は食品群の記録です。点数が確認できた分を集計しています。</p>
+        <p class="paperDayMemo" hidden></p>
+      </div>`;
+    dialog.querySelector('.paperPreviewDate').textContent = current.getFullYear() + '年 ' + fmt(current);
+    const measurements = dialog.querySelector('.paperMeasurements');
+    const weight = document.getElementById('weightInput').value;
+    const waist = document.getElementById('waistInput').value;
+    const bowel = [...document.querySelectorAll('#bowelButtons [data-bowel]')]
+      .find(button => button.dataset.bowel === day.bowel);
+    const condition = [...document.querySelectorAll('#conditionButtons [data-condition]')]
+      .find(button => button.dataset.condition === day.condition);
+    for (const [label, value] of [
+      ['体重', weight ? weight + ' kg' : '—'],
+      ['腹囲', waist ? waist + ' cm' : '—'],
+      ['水分', day.water ? day.water + ' mL' : '—'],
+      ['お通じ', bowel?.textContent || '—'],
+      ['体調', condition?.textContent || '—']
+    ]) {
+      const pair = document.createElement('div');
+      addText(pair, 'dt', label);
+      addText(pair, 'dd', value);
+      measurements.append(pair);
+    }
+    if (day.memo?.trim()) {
+      const note = dialog.querySelector('.paperDayMemo');
+      note.hidden = false;
+      addText(note, 'strong', '今日のひと言');
+      addText(note, 'span', day.memo);
+    }
+
+    const table = dialog.querySelector('table');
+    const mealTotals = mealDefs.map(([id, label]) => {
+      const meal = day[id];
+      const {rows, scores} = readMeal(meal);
+      const points = mealPoints(meal, scores);
+      const body = table.createTBody();
+      const heading = addText(body.insertRow(), 'th', [label, meal.mealTime].filter(Boolean).join('　'));
+      heading.colSpan = 5;
+      heading.scope = 'rowgroup';
+      heading.className = 'paperMealBand';
+      if (meal.img) {
+        const cell = body.insertRow().insertCell();
+        cell.colSpan = 5;
+        const photo = document.createElement('img');
+        photo.className = 'paperSheetPhoto';
+        photo.alt = label + 'の写真';
+        photo.src = meal.img;
+        cell.append(photo);
+      }
+      if (!rows.length && !meal.img && !meal.mealTime && total(points) == null) {
+        const empty = body.insertRow().insertCell();
+        empty.colSpan = 5;
+        empty.textContent = '記録なし';
+      }
+      let previousDish = '';
+      for (const row of rows) {
+        if (row.dish && row.dish !== previousDish) {
+          const dish = body.insertRow().insertCell();
+          dish.colSpan = 5;
+          addText(dish, 'strong', row.dish);
+          dish.className = 'paperDish';
+        }
+        previousDish = row.dish;
+        const marks = new Map(row.marks.map(mark => [Number(mark[1]), mark]));
+        const values = groups.map(group => marks.has(group) ? (row.points == null ? '○' : format(row.points)) : '');
+        const item = addScoreRow(body, row.detail || row.phrase, values);
+        item.classList.toggle('paperIngredient', Boolean(row.dish));
+        for (const [group, mark] of marks) {
+          const cell = item.cells[group];
+          cell.title = mark;
+          cell.setAttribute('aria-label', mark + ' ' + cell.textContent);
+        }
+      }
+      addScoreRow(body, '小計 ' + format(total(points)), points.map(format)).className = 'paperSubtotal';
+      return points;
+    });
+    const sums = groups.map((_, index) => total(mealTotals.map(points => points[index])));
+    addScoreRow(table.tFoot, '1日の合計 ' + format(total(sums)), sums.map(format));
+    dialog.querySelector('button').addEventListener('click', () => dialog.close());
+    dialog.addEventListener('close', () => {
+      dialog.remove();
+      opener.focus();
+    }, {once: true});
+    document.body.append(dialog);
+    dialog.showModal();
   }
 
   function mount() {
@@ -149,6 +267,16 @@
     const fields = [...panel.querySelectorAll('[data-point]')];
     time.value = meal.mealTime || '';
     memo.value = meal.mealMemo || '';
+
+    if (!document.querySelector('[data-paper-preview]')) {
+      const preview = document.createElement('button');
+      preview.type = 'button';
+      preview.className = 'paperAction';
+      preview.dataset.paperPreview = '';
+      preview.textContent = '1日のダイアリーをプレビュー';
+      preview.addEventListener('click', () => showDayPreview(dayData(), preview));
+      document.getElementById('saveDay').closest('.savebar').before(preview);
+    }
 
     function update() {
       const {scores, unmatched, rows} = readMeal(meal);
@@ -316,6 +444,30 @@
     .paperLegacy summary{cursor:pointer;min-height:44px;align-content:center}
     .paperPoint.g1{background:#eff7ff}.paperPoint.g2{background:#fff1f4}
     .paperPoint.g3{background:#f1faed}.paperPoint.g4{background:#fff8eb}
+    [data-paper-preview]{display:block;width:100%;margin:10px 0}
+    .paperPreview{box-sizing:border-box;width:min(680px,calc(100% - 16px));max-width:none;max-height:calc(100dvh - 20px);padding:0;border:1px solid #baa89c;border-radius:12px;background:#fffdf8;color:#392e28;overscroll-behavior:contain}
+    .paperPreview::backdrop{background:#31251cb3}
+    .paperPreview header{position:sticky;top:0;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 12px;background:#fff8eb;border-bottom:1px solid #baa89c}
+    .paperPreview header h2{margin:0;font-size:18px;white-space:nowrap}
+    .paperPreview header .paperAction{flex:0 0 auto;width:auto;padding-inline:14px;white-space:nowrap}
+    .paperSheet{padding:10px 12px 14px}
+    .paperPreviewDate{margin:0 0 6px;font-weight:700}
+    .paperMeasurements{display:flex;flex-wrap:wrap;gap:4px 14px;margin:0 0 10px;font-size:13px}
+    .paperMeasurements div{display:flex;flex:0 0 auto;gap:4px;white-space:nowrap}
+    .paperMeasurements dd{margin:0;font-weight:700}
+    .paperSheet table{width:100%;table-layout:fixed;border-collapse:collapse;font-size:13px}
+    .paperItemColumn{width:47%}
+    .paperSheet th,.paperSheet td{padding:5px 2px;border:1px solid #c8bbae;overflow-wrap:anywhere;text-align:center}
+    .paperSheet tr>:first-child{text-align:left;padding-left:6px}
+    .paperSheet tbody th:not(.paperMealBand){font-weight:400}
+    .paperSheet .paperMealBand,.paperSheet tfoot{background:#ffe9ce;font-weight:700}
+    .paperSheet thead .g1{background:#eff7ff}.paperSheet thead .g2{background:#fff1f4}
+    .paperSheet thead .g3{background:#f1faed}.paperSheet thead .g4{background:#fff8eb}
+    .paperSheet .paperDish,.paperSheet .paperSubtotal{background:#f8f1e7}
+    .paperSheet .paperIngredient th{padding-left:14px}
+    .paperSheetPhoto{display:block;max-width:100%;max-height:115px;border-radius:5px}
+    .paperSheet .paperHint,.paperDayMemo{margin:8px 0 0}
+    .paperDayMemo span{display:block;white-space:pre-wrap;overflow-wrap:anywhere}
   `;
   document.head.append(style);
 
