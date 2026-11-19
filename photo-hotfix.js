@@ -25,8 +25,8 @@
     m.img=m.imgs[0]||null;
   }
 
-  function persist(d){
-    try{ localStorage.setItem('sdd-'+keyDate(current),JSON.stringify(d)); }catch(e){ console.error('photo save',e); }
+  function persist(d, dateKey){
+    try{ localStorage.setItem('sdd-'+dateKey,JSON.stringify(d)); }catch(e){ console.error('photo save',e); }
   }
 
   function compressFile(file){
@@ -38,6 +38,7 @@
     const wrap=document.getElementById('meals');
     if(!ctx||!wrap) return;
     const {d,m}=ctx;
+    const dateKey=keyDate(current);
     ensureImgs(m);
 
     const oldPreview=wrap.querySelector('.preview');
@@ -72,7 +73,7 @@
             const data=await compressFile(f);
             if(data) m.imgs.push(data);
           }
-          ensureImgs(m);persist(d);render();
+          ensureImgs(m);persist(d,dateKey);render();
         };
       }
       label.childNodes[0].textContent='📷 写真を追加';
@@ -89,7 +90,7 @@
       if(i>=0&&i<m.imgs.length){
         m.imgs.splice(i,1);
         m.img=m.imgs[0]||null;
-        persist(d);
+        persist(d,dateKey);
         render();
       }
     });
