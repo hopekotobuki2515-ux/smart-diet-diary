@@ -1,7 +1,8 @@
 (() => {
   const groups = [1, 2, 3, 4];
   const pointFormat = new Intl.NumberFormat('ja-JP', {maximumFractionDigits: 2});
-  const rice = {group: 4, one_point_weight_g: 80};
+  // 炊いた精白米の目安。既存の第4群食品表「めし・水稲精白米」と同じ換算。
+  const rice = {group: 4, one_point_weight_g: 50};
   const foods = new Map([['ご飯', rice], ['ごはん', rice], ['白ご飯', rice], ['白ごはん', rice]]);
   const key = value => value.normalize('NFKC').replace(/\s+/g, '');
   const format = value => value == null ? '—' : pointFormat.format(value) + '点';
@@ -64,8 +65,8 @@
     panel.innerHTML = `
       <label class="paperField">食べた時刻<input type="time" name="mealTime"></label>
       <label class="paperField">食べたもののメモ<textarea name="mealMemo" rows="3" maxlength="1000"
-        placeholder="例：ご飯80g、焼き竹輪65g"></textarea></label>
-      <p class="paperHint">食品名と量が分かると点数を自動入力できます。写真とメモだけでも保存できます。</p>
+        placeholder="例：ご飯50g、焼き竹輪65g"></textarea></label>
+      <p class="paperHint">1点＝80kcal。食品ごとの目安量から点数を自動入力します。写真とメモだけでも保存できます。</p>
       <div class="paperHeading"><h3>この食事の点数</h3><output data-meal-total>—</output></div>
       <div class="paperGroups">${groups.map(group => `<label class="paperPoint g${group}">第${group}群
         <input type="text" inputmode="decimal" data-point="${group}" maxlength="9" placeholder="—">
