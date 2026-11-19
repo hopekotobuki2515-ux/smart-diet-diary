@@ -63,7 +63,6 @@
     return `<section class="fsd-balance"><div class="fsd-balance-title">四群バランス</div>${[1,2,3,4].map(g=>rowHtml(g,scores[g],targets[g])).join('')}<div class="fsd-target-note">破線が1食あたりの目安です。目安を超えた部分だけ警告色で表示しています。</div></section>`;
   }
   function currentMealId(){
-    try{if(typeof openMeal!=='undefined'&&mealNames[openMeal])return openMeal}catch(e){}
     if(mealNames[window.__activeMealId])return window.__activeMealId;
     return 'breakfast';
   }
@@ -87,6 +86,8 @@
     const d=typeof dayData==='function'?dayData():null;
     if(!d)return;
     const mealId=currentMealId(),m=d[mealId]||{},scores=mealScores(m),targets=targetsFor(mealId);
+    const paperPoints = window.getPaperMealPoints?.(m);
+    const hasPaperRecord = paperPoints && (m.mealMemo?.trim() || m.mealTime || paperPoints.some(value => value != null) || (m.img && Object.values(scores).every(value => value === 0)));
     const old=document.querySelector('.pvd-backdrop');if(old)old.remove();
     const back=document.createElement('div');back.className='pvd-backdrop';
     const photo=m.img?`<img class="pvd-photo" src="${m.img}" alt="登録した食事">`:`<div class="pvd-empty">${mealNames[mealId]}の写真または<br>食品データを確認できます</div>`;
@@ -95,6 +96,14 @@
     const guideVisual=m.img?`<div class="pvd-guide-visual"><img src="${m.img}" alt="適量の目安イメージ" style="transform:scale(${ratio})"><span class="pvd-guide-badge">目安 約${pct}%</span></div>`:`<div class="pvd-empty">破線と点数を見ながら<br>適量を確認</div>`;
     const guideText=ratio<.98?`登録量の約${pct}%が目安イメージ`:'登録量は目安範囲内のイメージ';
     back.innerHTML=`<div class="pvd-card" role="dialog" aria-modal="true" aria-label="食事の自己確認"><div class="pvd-head"><div><div class="pvd-kicker">PRIVATE VIEW</div><h3>食事の自己確認</h3></div><button class="pvd-close" aria-label="閉じる">×</button></div><div class="pvd-saved">登録しました（気づきを保存）</div><div class="pvd-compare"><section class="pvd-panel"><div class="pvd-label">あなたが食べたもの</div>${photo}<div class="pvd-mealname">${mealNames[mealId]}・合計 ${fmt(total)}点</div></section><section class="pvd-panel guide"><div class="pvd-label">あなたの適量ガイド</div>${guideVisual}<div class="pvd-guide-main" style="margin-top:8px">${guideText}</div><div class="pvd-guide-sub">写真の縮小は点数差を直感的に見るための目安表示です。下の4群バーで実際の点数を確認できます。</div></section></div>${balanceHtml(scores,targets)}${nutrientHtml(m,targets)}<div class="pvd-actions"><button class="pvd-stay">記録に戻る</button><button class="pvd-search">食品を確認する</button></div></div>`;
+    if (hasPaperRecord) {
+      const values = paperPoints.map(value => value == null ? '—' : new Intl.NumberFormat('ja-JP', {maximumFractionDigits: 2}).format(value) + '点');
+      back.querySelector('.pvd-compare').innerHTML = `<section class="pvd-panel">${photo}<div class="pvd-mealname">${mealNames[mealId]}</div><p class="paperHint"></p></section>`;
+      back.querySelector('.pvd-compare').style.display = 'block';
+      back.querySelector('.paperHint').textContent = [m.mealTime, m.mealMemo].filter(Boolean).join('　');
+      back.querySelector('.fsd-balance').innerHTML = `<div class="fsd-balance-title">この食事の点数</div><div class="paperGroups">${values.map((value, index) => `<div class="paperPoint g${index + 1}">第${index + 1}群<strong>${value}</strong></div>`).join('')}</div>`;
+      back.querySelector('.pvd-nutrients').remove();
+    }
     document.body.appendChild(back);
     const close=()=>back.remove();
     back.querySelector('.pvd-close').onclick=close;back.querySelector('.pvd-stay').onclick=close;

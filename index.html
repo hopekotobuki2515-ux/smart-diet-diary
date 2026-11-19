@@ -64,7 +64,7 @@ frame.addEventListener('load',()=>{
       fix.src='ui-hotfix.js?v=20260828y';
       fix.onload=()=>{
         const photo=doc.createElement('script');
-        photo.src='photo-hotfix.js?v=20260826u';
+        photo.src='photo-hotfix.js?v=20261120a';
         photo.onload=()=>{
           const fit=doc.createElement('script');
           fit.src='fit-hotfix.js?v=20260826y';
@@ -92,8 +92,11 @@ frame.addEventListener('load',()=>{
                       diaryLink.src='food-search-diary-link.js?v=20260828y';
                       diaryLink.onload=()=>{
                         const balanceBars=doc.createElement('script');
-                        balanceBars.src='private-balance-bars.js?v=20260828y';
+                        balanceBars.src='private-balance-bars.js?v=20261120a';
                         balanceBars.onload=()=>{
+                          const paperDiary=doc.createElement('script');
+                          paperDiary.src='paper-meal-diary.js?v=20261120a';
+                          doc.body.appendChild(paperDiary);
                           const spacing=doc.createElement('script');
                           spacing.src='food-search-spacing-hotfix.js?v=20260828y';
                           spacing.onload=()=>{
